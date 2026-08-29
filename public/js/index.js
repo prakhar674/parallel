@@ -1,66 +1,230 @@
 const socket = io();
-const createBtn = document.getElementById("createBtn");
-const joinBtn = document.getElementById("joinBtn");
-const joinPanel = document.getElementById("joinPanel");
-const roomCodeInput = document.getElementById("roomCode");
-const confirmJoinBtn = document.getElementById("confirmJoinBtn");
 
-/* Generate a unique room code */
+/* Elements */
+
+const usernameInput = document.getElementById("username");
+const roomCodeInput = document.getElementById("roomCode");
+
+const createRoomBtn = document.getElementById("createRoomBtn");
+const joinRoomBtn = document.getElementById("joinRoomBtn");
+
+const avatarOptions =
+  document.querySelectorAll(".avatar-option");
+
+
+/* User data */
+
+let selectedAvatar =
+  localStorage.getItem("userAvatar") || "🌊";
+
+
+/* Avatar selection */
+
+avatarOptions.forEach((avatar) => {
+
+  if (
+    avatar.dataset.avatar === selectedAvatar
+  ) {
+
+    avatar.classList.add("active");
+
+  }
+
+
+  avatar.addEventListener(
+    "click",
+    () => {
+
+      avatarOptions.forEach((item) => {
+
+        item.classList.remove("active");
+
+      });
+
+
+      avatar.classList.add("active");
+
+      selectedAvatar =
+        avatar.dataset.avatar;
+
+    }
+  );
+
+});
+
+
+/* Generate room code */
+
 function generateRoomCode() {
-  const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  const characters =
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
   let code = "";
 
   for (let i = 0; i < 6; i++) {
+
     code += characters.charAt(
-      Math.floor(Math.random() * characters.length)
+      Math.floor(
+        Math.random() *
+        characters.length
+      )
     );
+
   }
 
   return code;
+
 }
 
-/* Create a new Parallel */
-createBtn.addEventListener("click", () => {
-  const roomCode = generateRoomCode();
 
-  localStorage.setItem("roomCode", roomCode);
-  localStorage.setItem("roomRole", "host");
+/* Save user */
 
-  window.location.href = "profile-setup.html";
-});
+function saveUserData(
+  username,
+  roomCode
+) {
 
-/* Show join panel */
-joinBtn.addEventListener("click", () => {
-  joinPanel.classList.toggle("show");
+  localStorage.setItem(
+    "username",
+    username
+  );
 
-  if (joinPanel.classList.contains("show")) {
-    roomCodeInput.focus();
-  }
-});
+  localStorage.setItem(
+    "userAvatar",
+    selectedAvatar
+  );
 
-/* Join an existing Parallel */
-function joinParallel() {
-  const roomCode = roomCodeInput.value
-    .trim()
-    .toUpperCase();
+  localStorage.setItem(
+    "roomCode",
+    roomCode
+  );
 
-  if (roomCode.length !== 6) {
-    alert("Please enter a valid 6-character room code.");
-    roomCodeInput.focus();
-    return;
-  }
-
-  localStorage.setItem("roomCode", roomCode);
-  localStorage.setItem("roomRole", "guest");
-
-  window.location.href = "profile-setup.html";
 }
 
-confirmJoinBtn.addEventListener("click", joinParallel);
 
-/* Allow Enter key */
-roomCodeInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    joinParallel();
+/* Create room */
+
+if (createRoomBtn) {
+
+  createRoomBtn.addEventListener(
+    "click",
+    () => {
+
+      const username =
+        usernameInput.value.trim();
+
+      if (!username) {
+
+        alert(
+          "Please enter your name first."
+        );
+
+        usernameInput.focus();
+
+        return;
+
+      }
+
+
+      const roomCode =
+        generateRoomCode();
+
+
+      saveUserData(
+        username,
+        roomCode
+      );
+
+
+      window.location.href =
+        "room.html";
+
+    }
+  );
+
+}
+
+
+/* Join room */
+
+if (joinRoomBtn) {
+
+  joinRoomBtn.addEventListener(
+    "click",
+    () => {
+
+      const username =
+        usernameInput.value.trim();
+
+      const roomCode =
+        roomCodeInput.value
+          .trim()
+          .toUpperCase();
+
+
+      if (!username) {
+
+        alert(
+          "Please enter your name first."
+        );
+
+        usernameInput.focus();
+
+        return;
+
+      }
+
+
+      if (!roomCode) {
+
+        alert(
+          "Enter a room code to join."
+        );
+
+        roomCodeInput.focus();
+
+        return;
+
+      }
+
+
+      saveUserData(
+        username,
+        roomCode
+      );
+
+
+      window.location.href =
+        "room.html";
+
+    }
+  );
+
+}
+
+
+/* Socket status */
+
+socket.on(
+  "connect",
+  () => {
+
+    console.log(
+      "Connected to Parallel server"
+    );
+
   }
-});
+);
+
+
+socket.on(
+  "connect_error",
+  () => {
+
+    console.log(
+      "Parallel server is offline"
+    );
+
+  }
+);
