@@ -1,206 +1,521 @@
-const roomCode = localStorage.getItem("roomCode");
-const username = localStorage.getItem("username") || "You";
+const socket = io();
 
-/* Protect page */
+const roomCode =
+  localStorage.getItem("roomCode");
+
+const username =
+  localStorage.getItem("username") || "Guest";
+
+const avatar =
+  localStorage.getItem("userAvatar") || "🌊";
 
 if (!roomCode) {
   window.location.href = "index.html";
 }
 
-/* Elements */
 
-const roomCodeDisplay = document.getElementById("roomCodeDisplay");
-const galleryInput = document.getElementById("galleryInput");
-const photoGrid = document.getElementById("photoGrid");
-const galleryEmpty = document.getElementById("galleryEmpty");
+/* =========================
+   JOIN ROOM
+========================= */
 
-const photoCount = document.getElementById("photoCount");
-const todayCount = document.getElementById("todayCount");
-
-const clearGalleryBtn = document.getElementById("clearGalleryBtn");
-
-const photoModal = document.getElementById("photoModal");
-const modalImage = document.getElementById("modalImage");
-const closeModalBtn = document.getElementById("closeModalBtn");
+socket.emit("join-room", {
+  roomCode,
+  username,
+  avatar
+});
 
 
-/* Display room code */
+/* =========================
+   STORAGE
+========================= */
 
-roomCodeDisplay.textContent = `ROOM ${roomCode}`;
+const storageKey =
+  `parallelGallery_${roomCode}`;
 
-
-/* Storage key for this room */
-
-const galleryStorageKey = `parallelGallery_${roomCode}`;
-
-
-/* Get saved photos */
-
-let photos = JSON.parse(
-  localStorage.getItem(galleryStorageKey)
-) || [];
+let photos =
+  JSON.parse(
+    localStorage.getItem(storageKey)
+  ) || [];
 
 
-/* Save photos */
+/* =========================
+   ELEMENTS
+========================= */
+
+const galleryGrid =
+  document.getElementById("galleryGrid");
+
+const galleryEmpty =
+  document.getElementById("galleryEmpty");
+
+const photoInput =
+  document.getElementById("photoInput");
+
+const uploadBtn =
+  document.getElementById("uploadBtn");
+
+const clearGalleryBtn =
+  document.getElementById("clearGalleryBtn");
+
+const photoCount =
+  document.getElementById("photoCount");
+
+const roomCodeDisplay =
+  document.getElementById("roomCodeDisplay");
+
+
+if (roomCodeDisplay) {
+  roomCodeDisplay.textContent =
+    `ROOM ${roomCode}`;
+}
+
+
+/* =========================
+   SAVE LOCAL
+========================= */
 
 function savePhotos() {
+
   localStorage.setItem(
-    galleryStorageKey,
+    storageKey,
     JSON.stringify(photos)
   );
+
 }
 
 
-/* Update stats */
+/* =========================
+   SEND TO ROOM
+========================= */
 
-function updateStats() {
+function broadcastGallery() {
 
-  photoCount.textContent = photos.length;
-
-  const today = new Date().toDateString();
-
-  const todayPhotos = photos.filter((photo) => {
-    return new Date(photo.date).toDateString() === today;
+  socket.emit("update-gallery", {
+    roomCode,
+    photos
   });
 
-  todayCount.textContent = todayPhotos.length;
 }
 
 
-/* Open photo */
+/* =========================
+   UPDATE COUNT
+========================= */
 
-function openPhoto(imageSrc) {
+function updateCount() {
 
-  modalImage.src = imageSrc;
+  if (photoCount) {
+    photoCount.textContent =
+      photos.length;
+  }
 
-  photoModal.classList.add("active");
 }
 
 
-/* Render gallery */
+/* =========================
+   RENDER
+========================= */
 
 function renderGallery() {
 
-  photoGrid.innerHTML = "";
+  if (!galleryGrid) return;
+
+  galleryGrid.innerHTML = "";
+
 
   if (photos.length === 0) {
 
-    photoGrid.appendChild(galleryEmpty);
+    if (galleryEmpty) {
 
-    updateStats();
+      galleryGrid.appendChild(
+        galleryEmpty
+      );
+
+    }
+
+    updateCount();
 
     return;
   }
 
-  photos.forEach((photo, index) => {
 
-    const photoItem = document.createElement("div");
+  photos.forEach((photo) => {
 
-    photoItem.className = "photo-item";
+    const card =
+      document.createElement("div");
 
-    const image = document.createElement("img");
+    card.className =
+      "gallery-item";
 
-    image.src = photo.data;
-    image.alt = `Parallel memory ${index + 1}`;
 
-    photoItem.appendChild(image);
+    const image =
+      document.createElement("img");
 
-    photoItem.addEventListener("click", () => {
-      openPhoto(photo.data);
-    });
+    image.src =
+      photo.data;
 
-    photoGrid.appendChild(photoItem);
+    image.alt =
+      photo.name || "Parallel photo";
+
+
+    const info =
+      document.createElement("div");
+
+    info.className =
+      "gallery-photo-info";
+
+    info.innerHTML = `
+      <strong>
+        ${photo.name || "Photo"}
+      </strong>
+
+      <small>
+        by ${photo.username || "Guest"}
+      </small>
+    `;
+
+
+    const deleteBtn =
+      document.createElement("button");
+
+    deleteBtn.className =
+      "gallery-delete";
+
+    deleteBtn.textContent =
+      "Delete";
+
+
+    deleteBtn.addEventListener(
+      "click",
+      (event) => {
+
+        event.stopPropagation();
+
+        deletePhoto(photo.id);
+
+      }
+    );
+
+
+    card.appendChild(image);
+
+    card.appendChild(info);
+
+    card.appendChild(deleteBtn);
+
+
+    card.addEventListener(
+      "click",
+      () => {
+
+        openPhoto(photo);
+
+      }
+    );
+
+
+    galleryGrid.appendChild(card);
 
   });
 
-  updateStats();
+
+  updateCount();
+
 }
 
 
-/* Add photos */
+/* =========================
+   ADD PHOTOS
+========================= */
 
-galleryInput.addEventListener("change", () => {
+function addPhotos(files) {
 
-  const files = Array.from(galleryInput.files);
+  if (!files || files.length === 0) {
+    return;
+  }
 
-  if (!files.length) return;
 
-  let processed = 0;
+  Array.from(files).forEach(
+    (file) => {
 
-  files.forEach((file) => {
-
-    const reader = new FileReader();
-
-    reader.onload = (event) => {
-
-      photos.push({
-        data: event.target.result,
-        date: new Date().toISOString(),
-        addedBy: username
-      });
-
-      processed++;
-
-      if (processed === files.length) {
-
-        savePhotos();
-
-        renderGallery();
-
+      if (!file.type.startsWith("image/")) {
+        return;
       }
 
-    };
 
-    reader.readAsDataURL(file);
-
-  });
-
-  galleryInput.value = "";
-
-});
+      const reader =
+        new FileReader();
 
 
-/* Clear gallery */
+      reader.onload =
+        (event) => {
 
-clearGalleryBtn.addEventListener("click", () => {
+          const photo = {
 
-  if (photos.length === 0) return;
+            id:
+              `${Date.now()}-${Math.random()}`,
 
-  const confirmed = confirm(
-    "Clear all photos from this Parallel gallery?"
+            data:
+              event.target.result,
+
+            name:
+              file.name,
+
+            username,
+
+            avatar,
+
+            createdAt:
+              new Date().toISOString()
+
+          };
+
+
+          photos.unshift(photo);
+
+          savePhotos();
+
+          renderGallery();
+
+          broadcastGallery();
+
+        };
+
+
+      reader.readAsDataURL(file);
+
+    }
   );
+
+}
+
+
+/* =========================
+   INPUT
+========================= */
+
+if (photoInput) {
+
+  photoInput.addEventListener(
+    "change",
+    () => {
+
+      addPhotos(
+        photoInput.files
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================
+   UPLOAD BUTTON
+========================= */
+
+if (uploadBtn) {
+
+  uploadBtn.addEventListener(
+    "click",
+    () => {
+
+      if (photoInput) {
+        photoInput.click();
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================
+   DELETE
+========================= */
+
+function deletePhoto(id) {
+
+  const confirmed =
+    confirm("Delete this photo?");
 
   if (!confirmed) return;
 
-  photos = [];
+
+  photos =
+    photos.filter(
+      (photo) =>
+        photo.id !== id
+    );
+
 
   savePhotos();
 
   renderGallery();
 
-});
+  broadcastGallery();
+
+}
 
 
-/* Close modal */
+/* =========================
+   CLEAR
+========================= */
 
-closeModalBtn.addEventListener("click", () => {
+if (clearGalleryBtn) {
 
-  photoModal.classList.remove("active");
+  clearGalleryBtn.addEventListener(
+    "click",
+    () => {
 
-});
+      if (photos.length === 0) {
+        return;
+      }
 
 
-/* Close when clicking outside image */
+      const confirmed =
+        confirm(
+          "Clear all photos from this room?"
+        );
 
-photoModal.addEventListener("click", (event) => {
 
-  if (event.target === photoModal) {
-    photoModal.classList.remove("active");
+      if (!confirmed) return;
+
+
+      photos = [];
+
+      savePhotos();
+
+      renderGallery();
+
+      broadcastGallery();
+
+    }
+  );
+
+}
+
+
+/* =========================
+   RECEIVE GALLERY
+========================= */
+
+socket.on(
+  "gallery-updated",
+  (incomingPhotos) => {
+
+    if (!Array.isArray(incomingPhotos)) {
+      return;
+    }
+
+
+    /*
+      Replace local gallery with
+      the shared room gallery.
+    */
+
+    photos =
+      incomingPhotos;
+
+
+    savePhotos();
+
+    renderGallery();
+
   }
+);
 
-});
+
+/* =========================
+   PHOTO VIEWER
+========================= */
+
+function openPhoto(photo) {
+
+  const viewer =
+    document.createElement("div");
+
+  viewer.className =
+    "gallery-viewer";
 
 
-/* Initial render */
+  viewer.innerHTML = `
+    <div class="gallery-viewer-content">
+
+      <button class="gallery-viewer-close">
+        ×
+      </button>
+
+      <img
+        src="${photo.data}"
+        alt="Parallel photo"
+      >
+
+      <div>
+        <strong>
+          ${photo.name || "Photo"}
+        </strong>
+
+        <small>
+          by ${photo.username || "Guest"}
+        </small>
+      </div>
+
+    </div>
+  `;
+
+
+  document.body.appendChild(
+    viewer
+  );
+
+
+  viewer
+    .querySelector(
+      ".gallery-viewer-close"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        viewer.remove();
+
+      }
+    );
+
+
+  viewer.addEventListener(
+    "click",
+    (event) => {
+
+      if (event.target === viewer) {
+        viewer.remove();
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================
+   SOCKET STATUS
+========================= */
+
+socket.on(
+  "connect",
+  () => {
+
+    console.log(
+      "Gallery connected to Parallel"
+    );
+
+  }
+);
+
+
+/* =========================
+   INITIAL RENDER
+========================= */
 
 renderGallery();
