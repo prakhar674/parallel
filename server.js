@@ -1,411 +1,568 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const path = require("path");
 
 const app = express();
-
 const server = http.createServer(app);
 
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*"
+  }
+});
 
 
-/* Serve frontend */
+/* =========================
+   SERVE FRONTEND
+========================= */
 
 app.use(
-  express.static(
-    path.join(__dirname, "public")
-  )
+  express.static("public")
 );
 
 
-/* Store rooms */
+/* =========================
+   ROOM STORAGE
+========================= */
 
 const rooms = {};
 
 
-/* Socket connection */
+/* =========================
+   SOCKET CONNECTION
+========================= */
 
-io.on("connection", (socket) => {
+io.on(
+  "connection",
+  (socket) => {
 
-  console.log(
-    "User connected:",
-    socket.id
-  );
-
-
-  /* Join room */
-
-  socket.on(
-    "join-room",
-    ({
-      roomCode,
-      username,
-      avatar
-    }) => {
-
-      if (!roomCode) return;
+    console.log(
+      "User connected:",
+      socket.id
+    );
 
 
-      socket.join(roomCode);
+    /* =========================
+       JOIN ROOM
+    ========================= */
+
+    socket.on(
+      "join-room",
+      ({
+        roomCode,
+        username,
+        avatar
+      }) => {
+
+        if (!roomCode) return;
 
 
-      /* Create room if needed */
+        /*
+          Leave previous room
+        */
 
-      if (!rooms[roomCode]) {
+        if (
+          socket.roomCode &&
+          socket.roomCode !== roomCode
+        ) {
 
-        rooms[roomCode] = [];
+          socket.leave(
+            socket.roomCode
+          );
 
-      }
-
-
-      /* Add user */
-
-      const user = {
-        id: socket.id,
-        username:
-          username || "Guest",
-        avatar:
-          avatar || "🌊"
-      };
+        }
 
 
-      /* Prevent duplicate */
+        socket.join(roomCode);
 
-      const alreadyExists =
-        rooms[roomCode].some(
-          (member) =>
-            member.id === socket.id
-        );
+        socket.roomCode =
+          roomCode;
 
 
-      if (!alreadyExists) {
+        /*
+          Create room if needed
+        */
 
-        rooms[roomCode].push(user);
+        if (!rooms[roomCode]) {
 
-      }
+          rooms[roomCode] = {
+            members: []
+          };
 
-
-      /* Save room on socket */
-
-      socket.roomCode = roomCode;
-
-
-      /* Send existing members */
-
-      socket.emit(
-        "room-members",
-        rooms[roomCode]
-      );
+        }
 
 
-      /* Notify everyone */
+        /*
+          Prevent duplicate member
+        */
 
-      io.to(roomCode).emit(
-        "room-members",
-        rooms[roomCode]
-      );
-
-
-      /* Notify others */
-
-      socket.to(roomCode).emit(
-        "user-joined",
-        user
-      );
+        const existingMemberIndex =
+          rooms[roomCode].members.findIndex(
+            (member) =>
+              member.id === socket.id
+          );
 
 
-      console.log(
-        `${username} joined room ${roomCode}`
-      );
+        const user = {
 
-    }
-  );
-
-
-  /* Real-time chat */
-
-  socket.on(
-    "send-message",
-    ({
-      roomCode,
-      message,
-      username,
-      avatar
-    }) => {
-
-      if (
-        !roomCode ||
-        !message
-      ) return;
-
-
-      io.to(roomCode).emit(
-        "receive-message",
-        {
-          id: Date.now(),
-
-          message,
+          id: socket.id,
 
           username:
             username || "Guest",
 
           avatar:
-            avatar || "🌊",
+            avatar || "🌊"
 
-          senderId:
-            socket.id,
+        };
 
-          time:
-            new Date()
-              .toISOString()
+
+        if (
+          existingMemberIndex === -1
+        ) {
+
+          rooms[roomCode]
+            .members
+            .push(user);
+
+        } else {
+
+          rooms[roomCode]
+            .members[
+              existingMemberIndex
+            ] = user;
+
         }
-      );
-
-    }
-  );
 
 
-  /* WebRTC offer */
-
-  socket.on(
-    "webrtc-offer",
-    ({
-      roomCode,
-      offer,
-      target
-    }) => {
-
-      io.to(target).emit(
-        "webrtc-offer",
-        {
-          offer,
-          sender: socket.id
-        }
-      );
-
-    }
-  );
-
-
-  /* WebRTC answer */
-
-  socket.on(
-    "webrtc-answer",
-    ({
-      answer,
-      target
-    }) => {
-
-      io.to(target).emit(
-        "webrtc-answer",
-        {
-          answer,
-          sender: socket.id
-        }
-      );
-
-    }
-  );
-
-
-  /* WebRTC ICE candidate */
-
-  socket.on(
-    "ice-candidate",
-    ({
-      candidate,
-      target
-    }) => {
-
-      io.to(target).emit(
-        "ice-candidate",
-        {
-          candidate,
-          sender: socket.id
-        }
-      );
-
-    }
-  );
-
-
-  /* Shared notes */
-
-  socket.on(
-    "update-notes",
-    ({
-      roomCode,
-      notes
-    }) => {
-
-      socket.to(roomCode).emit(
-        "notes-updated",
-        notes
-      );
-
-    }
-  );
-
-
-  /* Shared canvas */
-
-  socket.on(
-    "canvas-draw",
-    ({
-      roomCode,
-      drawing
-    }) => {
-
-      socket.to(roomCode).emit(
-        "canvas-draw",
-        drawing
-      );
-
-    }
-  );
-
-
-  /* Shared canvas clear */
-
-  socket.on(
-    "canvas-clear",
-    ({
-      roomCode
-    }) => {
-
-      socket.to(roomCode).emit(
-        "canvas-clear"
-      );
-
-    }
-  );
-
-
-  /* Shared memories */
-
-  socket.on(
-    "update-memories",
-    ({
-      roomCode,
-      memories
-    }) => {
-
-      socket.to(roomCode).emit(
-        "memories-updated",
-        memories
-      );
-
-    }
-  );
-
-
-  /* Shared gallery */
-
-  socket.on(
-    "update-gallery",
-    ({
-      roomCode,
-      photos
-    }) => {
-
-      socket.to(roomCode).emit(
-        "gallery-updated",
-        photos
-      );
-
-    }
-  );
-
-
-  /* Cinema sync */
-
-  socket.on(
-    "cinema-sync",
-    ({
-      roomCode,
-      action,
-      currentTime,
-      videoName
-    }) => {
-
-      socket.to(roomCode).emit(
-        "cinema-sync",
-        {
-          action,
-          currentTime,
-          videoName
-        }
-      );
-
-    }
-  );
-
-
-  /* User disconnect */
-
-  socket.on(
-    "disconnect",
-    () => {
-
-      const roomCode =
-        socket.roomCode;
-
-
-      if (
-        roomCode &&
-        rooms[roomCode]
-      ) {
-
-        rooms[roomCode] =
-          rooms[roomCode].filter(
-            (user) =>
-              user.id !== socket.id
-          );
-
-
-        socket.to(roomCode).emit(
-          "user-left",
-          socket.id
-        );
-
+        /*
+          Send current members
+        */
 
         io.to(roomCode).emit(
           "room-members",
-          rooms[roomCode]
+          rooms[roomCode].members
         );
 
 
-        /* Delete empty room */
+        /*
+          Notify others
+        */
+
+        socket.to(roomCode).emit(
+          "user-joined",
+          user
+        );
+
+
+        console.log(
+          `${user.username} joined room ${roomCode}`
+        );
+
+      }
+    );
+
+
+    /* =========================
+       LIVE CHAT
+    ========================= */
+
+    socket.on(
+      "send-message",
+      ({
+        roomCode,
+        message,
+        username,
+        avatar
+      }) => {
 
         if (
+          !roomCode ||
+          !message
+        ) return;
+
+
+        io.to(roomCode).emit(
+          "receive-message",
+          {
+
+            senderId:
+              socket.id,
+
+            message,
+
+            username:
+              username || "Guest",
+
+            avatar:
+              avatar || "🌊",
+
+            createdAt:
+              new Date().toISOString()
+
+          }
+        );
+
+      }
+    );
+
+
+    /* =========================
+       WEBRTC OFFER
+    ========================= */
+
+    socket.on(
+      "webrtc-offer",
+      ({
+        offer,
+        target
+      }) => {
+
+        if (!target || !offer) {
+          return;
+        }
+
+
+        io.to(target).emit(
+          "webrtc-offer",
+          {
+
+            offer,
+
+            sender:
+              socket.id
+
+          }
+        );
+
+      }
+    );
+
+
+    /* =========================
+       WEBRTC ANSWER
+    ========================= */
+
+    socket.on(
+      "webrtc-answer",
+      ({
+        answer,
+        target
+      }) => {
+
+        if (!target || !answer) {
+          return;
+        }
+
+
+        io.to(target).emit(
+          "webrtc-answer",
+          {
+
+            answer,
+
+            sender:
+              socket.id
+
+          }
+        );
+
+      }
+    );
+
+
+    /* =========================
+       ICE CANDIDATE
+    ========================= */
+
+    socket.on(
+      "ice-candidate",
+      ({
+        candidate,
+        target
+      }) => {
+
+        if (
+          !target ||
+          !candidate
+        ) {
+          return;
+        }
+
+
+        io.to(target).emit(
+          "ice-candidate",
+          {
+
+            candidate,
+
+            sender:
+              socket.id
+
+          }
+        );
+
+      }
+    );
+
+
+    /* =========================
+       CINEMA SYNC
+    ========================= */
+
+    socket.on(
+      "cinema-sync",
+      ({
+        roomCode,
+        action,
+        currentTime,
+        videoName
+      }) => {
+
+        if (!roomCode) return;
+
+
+        socket.to(roomCode).emit(
+          "cinema-sync",
+          {
+
+            action,
+
+            currentTime,
+
+            videoName,
+
+            sender:
+              socket.id
+
+          }
+        );
+
+      }
+    );
+
+
+    /* =========================
+       GALLERY SYNC
+    ========================= */
+
+    socket.on(
+      "update-gallery",
+      ({
+        roomCode,
+        photos
+      }) => {
+
+        if (
+          !roomCode ||
+          !Array.isArray(photos)
+        ) {
+          return;
+        }
+
+
+        socket.to(roomCode).emit(
+          "gallery-updated",
+          photos
+        );
+
+      }
+    );
+
+
+    /* =========================
+       MEMORIES SYNC
+    ========================= */
+
+    socket.on(
+      "update-memories",
+      ({
+        roomCode,
+        memories
+      }) => {
+
+        if (
+          !roomCode ||
+          !Array.isArray(memories)
+        ) {
+          return;
+        }
+
+
+        socket.to(roomCode).emit(
+          "memories-updated",
+          memories
+        );
+
+      }
+    );
+
+
+    /* =========================
+       CANVAS DRAW
+    ========================= */
+
+    socket.on(
+      "canvas-draw",
+      ({
+        roomCode,
+        drawing
+      }) => {
+
+        if (
+          !roomCode ||
+          !drawing
+        ) {
+          return;
+        }
+
+
+        socket.to(roomCode).emit(
+          "canvas-draw",
+          drawing
+        );
+
+      }
+    );
+
+
+    /* =========================
+       CANVAS CLEAR
+    ========================= */
+
+    socket.on(
+      "canvas-clear",
+      ({
+        roomCode
+      }) => {
+
+        if (!roomCode) return;
+
+
+        socket.to(roomCode).emit(
+          "canvas-clear"
+        );
+
+      }
+    );
+
+
+    /* =========================
+       NOTES SYNC
+    ========================= */
+
+    socket.on(
+      "update-notes",
+      ({
+        roomCode,
+        notes
+      }) => {
+
+        if (
+          !roomCode ||
+          !Array.isArray(notes)
+        ) {
+          return;
+        }
+
+
+        socket.to(roomCode).emit(
+          "notes-updated",
+          notes
+        );
+
+      }
+    );
+
+
+    /* =========================
+       DISCONNECT
+    ========================= */
+
+    socket.on(
+      "disconnect",
+      () => {
+
+        const roomCode =
+          socket.roomCode;
+
+
+        if (
+          roomCode &&
           rooms[roomCode]
-            .length === 0
         ) {
 
-          delete rooms[roomCode];
+          rooms[roomCode].members =
+            rooms[
+              roomCode
+            ].members.filter(
+              (member) =>
+                member.id !== socket.id
+            );
+
+
+          /*
+            Notify room
+          */
+
+          io.to(roomCode).emit(
+            "user-left",
+            socket.id
+          );
+
+
+          /*
+            Update members
+          */
+
+          io.to(roomCode).emit(
+            "room-members",
+            rooms[roomCode].members
+          );
+
+
+          /*
+            Delete empty room
+          */
+
+          if (
+            rooms[roomCode]
+              .members.length === 0
+          ) {
+
+            delete rooms[roomCode];
+
+          }
 
         }
 
+
+        console.log(
+          "User disconnected:",
+          socket.id
+        );
+
       }
+    );
+
+  }
+);
 
 
-      console.log(
-        "User disconnected:",
-        socket.id
-      );
-
-    }
-  );
-
-});
-
-
-/* Start server */
+/* =========================
+   START SERVER
+========================= */
 
 const PORT =
   process.env.PORT || 3000;
 
 
 server.listen(
-  PORT
+  PORT,
+  () => {
+
+    console.log(
+      `Parallel is running on port ${PORT}`
+    );
+
+  }
+);
