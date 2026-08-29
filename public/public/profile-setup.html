@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Set Up Your Profile — Parallel</title>
+
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/profile.css">
+</head>
+
+<body>
+
+  <!-- Background -->
+  <div class="background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="profile-nav">
+
+    <a href="index.html" class="logo">
+      <div class="logo-icon">P</div>
+      <span>Parallel</span>
+    </a>
+
+    <div class="step-indicator">
+      <span class="active"></span>
+      <span></span>
+    </div>
+
+  </nav>
+
+
+  <!-- Main -->
+  <main class="setup-container">
+
+    <section class="setup-card glass">
+
+      <div class="setup-icon">
+        ✦
+      </div>
+
+      <p class="eyebrow">
+        YOUR PARALLEL PROFILE
+      </p>
+
+      <h1 class="page-title">
+        Before we begin,
+        <span>who are you?</span>
+      </h1>
+
+      <p class="setup-text">
+        Choose how you would like to appear
+        inside your shared space.
+      </p>
+
+
+      <!-- Avatar -->
+      <div class="avatar-section">
+
+        <p class="field-label">
+          CHOOSE YOUR AVATAR
+        </p>
+
+        <div class="avatar-picker">
+
+          <button
+            class="avatar-option selected"
+            data-avatar="🌊"
+            type="button"
+          >
+            🌊
+          </button>
+
+          <button
+            class="avatar-option"
+            data-avatar="✨"
+            type="button"
+          >
+            ✨
+          </button>
+
+          <button
+            class="avatar-option"
+            data-avatar="🌙"
+            type="button"
+          >
+            🌙
+          </button>
+
+          <button
+            class="avatar-option"
+            data-avatar="🪐"
+            type="button"
+          >
+            🪐
+          </button>
+
+          <button
+            class="avatar-option"
+            data-avatar="🦋"
+            type="button"
+          >
+            🦋
+          </button>
+
+          <button
+            class="avatar-option"
+            data-avatar="🎧"
+            type="button"
+          >
+            🎧
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- Name -->
+      <div class="name-section">
+
+        <label for="displayName">
+          YOUR NAME
+        </label>
+
+        <input
+          type="text"
+          id="displayName"
+          placeholder="What should we call you?"
+          maxlength="20"
+          autocomplete="off"
+        >
+
+      </div>
+
+
+      <!-- Room Information -->
+      <div class="room-preview">
+
+        <div>
+          <small>YOUR ROOM</small>
+          <strong id="roomCodeDisplay">------</strong>
+        </div>
+
+        <span id="roomRoleDisplay">
+          Setting up...
+        </span>
+
+      </div>
+
+
+      <!-- Continue -->
+      <button
+        id="continueBtn"
+        class="primary-btn continue-btn"
+      >
+        Enter Parallel →
+      </button>
+
+    </section>
+
+  </main>
+
+
+  <footer>
+    <span>PARALLEL</span>
+    <p>Your shared space starts here.</p>
+  </footer>
+
+
+  <script src="js/profile.js"></script>
+
+</body>
+
+</html>
