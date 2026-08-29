@@ -1,14 +1,28 @@
-const roomCode = localStorage.getItem("roomCode");
-const username = localStorage.getItem("username") || "You";
+const socket = io();
 
-/* Protect page */
+const roomCode = localStorage.getItem("roomCode");
+const username = localStorage.getItem("username") || "Guest";
+const avatar = localStorage.getItem("userAvatar") || "🌊";
 
 if (!roomCode) {
   window.location.href = "index.html";
 }
 
 
-/* Elements */
+/* =========================
+   JOIN ROOM
+========================= */
+
+socket.emit("join-room", {
+  roomCode,
+  username,
+  avatar
+});
+
+
+/* =========================
+   ELEMENTS
+========================= */
 
 const roomCodeDisplay =
   document.getElementById("roomCodeDisplay");
@@ -68,39 +82,69 @@ const colorButtons =
   document.querySelectorAll(".note-color");
 
 
-/* Display room */
+/* =========================
+   ROOM DISPLAY
+========================= */
 
-roomCodeDisplay.textContent =
-  `ROOM ${roomCode}`;
+if (roomCodeDisplay) {
+  roomCodeDisplay.textContent =
+    `ROOM ${roomCode}`;
+}
 
 
-/* Storage */
+/* =========================
+   STORAGE
+========================= */
 
 const notesStorageKey =
   `parallelNotes_${roomCode}`;
 
-let notes = JSON.parse(
-  localStorage.getItem(notesStorageKey)
-) || [];
+let notes =
+  JSON.parse(
+    localStorage.getItem(notesStorageKey)
+  ) || [];
 
 
-/* Current state */
+/* =========================
+   STATE
+========================= */
 
 let selectedColor = "blue";
+
 let editingNoteId = null;
 
 
-/* Save notes */
+/* =========================
+   SAVE LOCAL
+========================= */
 
 function saveNotes() {
+
   localStorage.setItem(
     notesStorageKey,
     JSON.stringify(notes)
   );
+
 }
 
 
-/* Format date */
+/* =========================
+   BROADCAST NOTES
+========================= */
+
+function broadcastNotes() {
+
+  socket.emit("update-notes", {
+    roomCode,
+    notes
+  });
+
+}
+
+
+/* =========================
+   FORMAT DATE
+========================= */
 
 function formatDate(dateString) {
 
@@ -118,9 +162,13 @@ function formatDate(dateString) {
 }
 
 
-/* Open modal */
+/* =========================
+   OPEN MODAL
+========================= */
 
 function openNoteModal(note = null) {
+
+  if (!noteModal) return;
 
   noteModal.classList.add("active");
 
@@ -135,7 +183,8 @@ function openNoteModal(note = null) {
 
     document.getElementById(
       "noteModalTitle"
-    ).textContent = "Change something.";
+    ).textContent =
+      "Change something.";
 
     saveNoteBtn.textContent =
       "Update Note ✦";
@@ -159,7 +208,8 @@ function openNoteModal(note = null) {
 
     document.getElementById(
       "noteModalTitle"
-    ).textContent = "Write something.";
+    ).textContent =
+      "Write something.";
 
     saveNoteBtn.textContent =
       "Save Note ✦";
@@ -183,11 +233,17 @@ function openNoteModal(note = null) {
 }
 
 
-/* Close modal */
+/* =========================
+   CLOSE MODAL
+========================= */
 
 function closeNoteModal() {
 
-  noteModal.classList.remove("active");
+  if (!noteModal) return;
+
+  noteModal.classList.remove(
+    "active"
+  );
 
   noteForm.reset();
 
@@ -198,7 +254,9 @@ function closeNoteModal() {
 }
 
 
-/* Select note color */
+/* =========================
+   COLOR SELECT
+========================= */
 
 colorButtons.forEach((button) => {
 
@@ -209,13 +267,15 @@ colorButtons.forEach((button) => {
       selectedColor =
         button.dataset.color;
 
-      colorButtons.forEach((colorButton) => {
+      colorButtons.forEach(
+        (colorButton) => {
 
-        colorButton.classList.remove(
-          "active"
-        );
+          colorButton.classList.remove(
+            "active"
+          );
 
-      });
+        }
+      );
 
       button.classList.add(
         "active"
@@ -227,12 +287,16 @@ colorButtons.forEach((button) => {
 });
 
 
-/* Update stats */
+/* =========================
+   UPDATE STATS
+========================= */
 
 function updateStats() {
 
-  noteCount.textContent =
-    notes.length;
+  if (noteCount) {
+    noteCount.textContent =
+      notes.length;
+  }
 
 
   const today =
@@ -242,19 +306,25 @@ function updateStats() {
     notes.filter((note) => {
 
       return (
-        new Date(note.createdAt)
-          .toDateString() === today
+        new Date(
+          note.createdAt
+        ).toDateString() === today
       );
 
     });
 
-  todayNoteCount.textContent =
-    todayNotes.length;
+
+  if (todayNoteCount) {
+    todayNoteCount.textContent =
+      todayNotes.length;
+  }
 
 
   if (notes.length === 0) {
 
-    latestNote.textContent = "—";
+    if (latestNote) {
+      latestNote.textContent = "—";
+    }
 
     return;
 
@@ -264,23 +334,39 @@ function updateStats() {
   const newestNote =
     [...notes].sort(
       (a, b) =>
-        new Date(b.updatedAt || b.createdAt) -
-        new Date(a.updatedAt || a.createdAt)
+        new Date(
+          b.updatedAt ||
+          b.createdAt
+        ) -
+        new Date(
+          a.updatedAt ||
+          a.createdAt
+        )
     )[0];
 
 
-  latestNote.textContent =
-    formatDate(
-      newestNote.updatedAt ||
-      newestNote.createdAt
-    );
+  if (latestNote) {
+
+    latestNote.textContent =
+      formatDate(
+        newestNote.updatedAt ||
+        newestNote.createdAt
+      );
+
+  }
 
 }
 
 
-/* Open note viewer */
+/* =========================
+   NOTE VIEWER
+========================= */
 
 function openNoteViewer(note) {
+
+  if (!noteViewerCard || !noteViewer) {
+    return;
+  }
 
   noteViewerCard.innerHTML = `
     <span class="viewer-note-date">
@@ -290,22 +376,23 @@ function openNoteViewer(note) {
       )}
     </span>
 
-    <h2>
-      ${note.title}
-    </h2>
+    <h2>${note.title}</h2>
 
     <div class="viewer-note-content">
       ${note.content}
     </div>
   `;
 
-
-  noteViewer.classList.add("active");
+  noteViewer.classList.add(
+    "active"
+  );
 
 }
 
 
-/* Delete note */
+/* =========================
+   DELETE NOTE
+========================= */
 
 function deleteNote(id) {
 
@@ -317,7 +404,8 @@ function deleteNote(id) {
 
   notes =
     notes.filter(
-      (note) => note.id !== id
+      (note) =>
+        note.id !== id
     );
 
 
@@ -325,21 +413,31 @@ function deleteNote(id) {
 
   renderNotes();
 
+  broadcastNotes();
+
 }
 
 
-/* Render notes */
+/* =========================
+   RENDER NOTES
+========================= */
 
 function renderNotes() {
+
+  if (!notesGrid) return;
 
   notesGrid.innerHTML = "";
 
 
   if (notes.length === 0) {
 
-    notesGrid.appendChild(
-      notesEmpty
-    );
+    if (notesEmpty) {
+
+      notesGrid.appendChild(
+        notesEmpty
+      );
+
+    }
 
     updateStats();
 
@@ -351,8 +449,14 @@ function renderNotes() {
   const sortedNotes =
     [...notes].sort(
       (a, b) =>
-        new Date(b.updatedAt || b.createdAt) -
-        new Date(a.updatedAt || a.createdAt)
+        new Date(
+          b.updatedAt ||
+          b.createdAt
+        ) -
+        new Date(
+          a.updatedAt ||
+          a.createdAt
+        )
     );
 
 
@@ -409,7 +513,7 @@ function renderNotes() {
       "note-author";
 
     author.textContent =
-      `by ${note.author}`;
+      `by ${note.author || "Guest"}`;
 
 
     const deleteButton =
@@ -443,8 +547,6 @@ function renderNotes() {
     noteItem.appendChild(footer);
 
 
-    /* Click note → viewer */
-
     noteItem.addEventListener(
       "click",
       () => {
@@ -454,8 +556,6 @@ function renderNotes() {
       }
     );
 
-
-    /* Double click → edit */
 
     noteItem.addEventListener(
       "dblclick",
@@ -479,171 +579,256 @@ function renderNotes() {
 }
 
 
-/* Save or update note */
+/* =========================
+   SAVE / UPDATE NOTE
+========================= */
 
-noteForm.addEventListener(
-  "submit",
-  (event) => {
+if (noteForm) {
 
-    event.preventDefault();
+  noteForm.addEventListener(
+    "submit",
+    (event) => {
 
-
-    const title =
-      noteTitle.value.trim();
-
-    const content =
-      noteContent.value.trim();
+      event.preventDefault();
 
 
-    if (!title || !content) return;
+      const title =
+        noteTitle.value.trim();
+
+      const content =
+        noteContent.value.trim();
 
 
-    if (editingNoteId) {
-
-      const note =
-        notes.find(
-          (item) =>
-            item.id === editingNoteId
-        );
+      if (!title || !content) {
+        return;
+      }
 
 
-      if (note) {
+      if (editingNoteId) {
 
-        note.title = title;
+        const note =
+          notes.find(
+            (item) =>
+              item.id === editingNoteId
+          );
 
-        note.content = content;
 
-        note.color = selectedColor;
+        if (note) {
 
-        note.updatedAt =
-          new Date().toISOString();
+          note.title = title;
+
+          note.content = content;
+
+          note.color =
+            selectedColor;
+
+          note.updatedAt =
+            new Date().toISOString();
+
+        }
+
+      } else {
+
+        notes.push({
+
+          id:
+            `${Date.now()}-${Math.random()}`,
+
+          title,
+
+          content,
+
+          color:
+            selectedColor,
+
+          author:
+            username,
+
+          createdAt:
+            new Date().toISOString()
+
+        });
 
       }
 
-    } else {
 
-      notes.push({
+      saveNotes();
 
-        id: Date.now(),
+      renderNotes();
 
-        title: title,
+      broadcastNotes();
 
-        content: content,
-
-        color: selectedColor,
-
-        author: username,
-
-        createdAt:
-          new Date().toISOString()
-
-      });
+      closeNoteModal();
 
     }
+  );
 
+}
+
+
+/* =========================
+   RECEIVE REAL-TIME NOTES
+========================= */
+
+socket.on(
+  "notes-updated",
+  (incomingNotes) => {
+
+    if (
+      !Array.isArray(
+        incomingNotes
+      )
+    ) {
+      return;
+    }
+
+
+    notes =
+      incomingNotes;
 
     saveNotes();
 
     renderNotes();
 
-    closeNoteModal();
-
   }
 );
 
 
-/* Open buttons */
+/* =========================
+   BUTTON EVENTS
+========================= */
 
-openNoteModalBtn.addEventListener(
-  "click",
-  () => openNoteModal()
-);
+if (openNoteModalBtn) {
 
-emptyAddNoteBtn.addEventListener(
-  "click",
-  () => openNoteModal()
-);
+  openNoteModalBtn.addEventListener(
+    "click",
+    () => openNoteModal()
+  );
 
-
-/* Close modal */
-
-closeNoteModalBtn.addEventListener(
-  "click",
-  closeNoteModal
-);
+}
 
 
-noteModal.addEventListener(
-  "click",
-  (event) => {
+if (emptyAddNoteBtn) {
 
-    if (event.target === noteModal) {
+  emptyAddNoteBtn.addEventListener(
+    "click",
+    () => openNoteModal()
+  );
 
-      closeNoteModal();
+}
+
+
+if (closeNoteModalBtn) {
+
+  closeNoteModalBtn.addEventListener(
+    "click",
+    closeNoteModal
+  );
+
+}
+
+
+if (noteModal) {
+
+  noteModal.addEventListener(
+    "click",
+    (event) => {
+
+      if (
+        event.target === noteModal
+      ) {
+
+        closeNoteModal();
+
+      }
 
     }
+  );
 
-  }
-);
-
-
-/* Close viewer */
-
-closeNoteViewerBtn.addEventListener(
-  "click",
-  () => {
-
-    noteViewer.classList.remove(
-      "active"
-    );
-
-  }
-);
+}
 
 
-noteViewer.addEventListener(
-  "click",
-  (event) => {
+/* =========================
+   CLOSE VIEWER
+========================= */
 
-    if (event.target === noteViewer) {
+if (closeNoteViewerBtn) {
+
+  closeNoteViewerBtn.addEventListener(
+    "click",
+    () => {
 
       noteViewer.classList.remove(
         "active"
       );
 
     }
+  );
 
-  }
-);
-
-
-/* Clear all */
-
-clearNotesBtn.addEventListener(
-  "click",
-  () => {
-
-    if (notes.length === 0) return;
+}
 
 
-    const confirmed =
-      confirm(
-        "Clear all notes from this Parallel room?"
-      );
+if (noteViewer) {
 
-    if (!confirmed) return;
+  noteViewer.addEventListener(
+    "click",
+    (event) => {
+
+      if (
+        event.target === noteViewer
+      ) {
+
+        noteViewer.classList.remove(
+          "active"
+        );
+
+      }
+
+    }
+  );
+
+}
 
 
-    notes = [];
+/* =========================
+   CLEAR ALL
+========================= */
 
-    saveNotes();
+if (clearNotesBtn) {
 
-    renderNotes();
+  clearNotesBtn.addEventListener(
+    "click",
+    () => {
 
-  }
-);
+      if (notes.length === 0) {
+        return;
+      }
 
 
-/* Initial render */
+      const confirmed =
+        confirm(
+          "Clear all notes from this Parallel room?"
+        );
+
+      if (!confirmed) return;
+
+
+      notes = [];
+
+      saveNotes();
+
+      renderNotes();
+
+      broadcastNotes();
+
+    }
+  );
+
+}
+
+
+/* =========================
+   INITIAL RENDER
+========================= */
 
 renderNotes();
