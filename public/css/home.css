@@ -1,0 +1,388 @@
+.home-nav {
+  width: min(1180px, 92%);
+  margin: auto;
+  padding: 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.room-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  background: rgba(59, 167, 255, 0.06);
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.room-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 12px var(--cyan);
+}
+
+.home-container {
+  width: min(1180px, 92%);
+  margin: auto;
+  padding: 50px 0 70px;
+}
+
+/* Welcome */
+
+.welcome-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+}
+
+.welcome-section h1 {
+  margin-top: 8px;
+  font-size: clamp(38px, 5vw, 60px);
+}
+
+.welcome-section h1 span {
+  color: var(--blue);
+}
+
+.welcome-section p:not(.eyebrow) {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.profile-avatar {
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: rgba(59, 167, 255, 0.1);
+  font-size: 36px;
+  box-shadow: 0 0 30px rgba(59, 167, 255, 0.1);
+}
+
+/* Shared Parallel Card */
+
+.parallel-home-card {
+  margin-top: 42px;
+  padding: 30px;
+  border-radius: 26px;
+}
+
+.parallel-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.parallel-card-header h2 {
+  margin-top: 7px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 28px;
+}
+
+.private-badge {
+  padding: 8px 12px;
+  border: 1px solid rgba(102, 227, 255, 0.12);
+  border-radius: 100px;
+  background: rgba(102, 227, 255, 0.06);
+  color: var(--cyan);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* Members */
+
+.members {
+  min-height: 150px;
+  margin-top: 25px;
+  display: flex;
+  align-items: center;
+}
+
+.member-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(102, 227, 255, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.member-avatar {
+  width: 55px;
+  height: 55px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 18px;
+  background: rgba(59, 167, 255, 0.12);
+  font-size: 25px;
+}
+
+.friend-avatar {
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--muted);
+}
+
+.member-card strong {
+  display: block;
+  font-size: 14px;
+}
+
+.member-card span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.member-card i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+}
+
+.connection-line {
+  width: 100px;
+  height: 2px;
+  margin: 0 18px;
+  position: relative;
+  background: linear-gradient(
+    90deg,
+    rgba(102, 227, 255, 0.15),
+    var(--cyan),
+    rgba(102, 227, 255, 0.15)
+  );
+}
+
+.connection-line span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: var(--cyan);
+  transform: translate(-50%, -50%);
+  animation: homeFloat 2s ease-in-out infinite;
+}
+
+@keyframes homeFloat {
+  0%, 100% {
+    transform: translate(-50%, -50%) translateY(-3px);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) translateY(3px);
+  }
+}
+
+/* Invite */
+
+.invite-box {
+  margin-top: 22px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  background: rgba(3, 13, 27, 0.45);
+}
+
+.invite-box small {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.invite-box strong {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 19px;
+  letter-spacing: 3px;
+}
+
+.invite-box button {
+  min-height: 42px;
+  padding: 0 16px;
+}
+
+/* Spaces */
+
+.spaces-section {
+  margin-top: 65px;
+}
+
+.section-title h2 {
+  margin-top: 7px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 30px;
+}
+
+.spaces-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.space-card {
+  min-height: 115px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(9, 24, 43, 0.55);
+  transition: 0.25s ease;
+}
+
+.space-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(102, 227, 255, 0.35);
+  background: rgba(59, 167, 255, 0.08);
+}
+
+.space-card.featured {
+  border-color: rgba(102, 227, 255, 0.25);
+  background: linear-gradient(
+    135deg,
+    rgba(59, 167, 255, 0.13),
+    rgba(102, 227, 255, 0.05)
+  );
+}
+
+.space-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 16px;
+  background: rgba(59, 167, 255, 0.1);
+  font-size: 23px;
+}
+
+.space-card h3 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 16px;
+}
+
+.space-card p {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.arrow {
+  margin-left: auto;
+  color: var(--cyan);
+  font-size: 20px;
+  transition: 0.2s ease;
+}
+
+.space-card:hover .arrow {
+  transform: translateX(4px);
+}
+
+/* Footer */
+
+footer {
+  padding: 28px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+footer span {
+  display: block;
+  margin-bottom: 5px;
+  color: #9db9d5;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+/* Mobile */
+
+@media (max-width: 700px) {
+  .home-container {
+    padding-top: 30px;
+  }
+
+  .members {
+    flex-direction: column;
+  }
+
+  .member-card {
+    width: 100%;
+  }
+
+  .connection-line {
+    width: 2px;
+    height: 45px;
+    margin: 10px 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(102, 227, 255, 0.15),
+      var(--cyan),
+      rgba(102, 227, 255, 0.15)
+    );
+  }
+
+  .spaces-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 500px) {
+  .room-pill {
+    font-size: 8px;
+  }
+
+  .profile-avatar {
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    font-size: 27px;
+  }
+
+  .welcome-section h1 {
+    font-size: 38px;
+  }
+
+  .parallel-home-card {
+    padding: 20px;
+  }
+
+  .invite-box {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .invite-box button {
+    width: 100%;
+  }
+}
