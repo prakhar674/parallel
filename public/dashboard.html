@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Dashboard — Parallel</title>
+
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+
+<body>
+
+  <!-- Background -->
+  <div class="background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="dashboard-nav">
+
+    <a href="home.html" class="logo">
+      <div class="logo-icon">P</div>
+      <span>Parallel</span>
+    </a>
+
+    <div class="nav-right">
+
+      <div class="room-pill">
+        <span class="room-dot"></span>
+        <span id="roomCodeDisplay">ROOM ------</span>
+      </div>
+
+      <a href="home.html" class="back-home">
+        ← Home
+      </a>
+
+    </div>
+
+  </nav>
+
+
+  <main class="dashboard-container">
+
+    <!-- Header -->
+    <section class="dashboard-header">
+
+      <div>
+
+        <p class="eyebrow">
+          YOUR SHARED WORLD
+        </p>
+
+        <h1 class="page-title">
+          Everything, <span>together.</span>
+        </h1>
+
+        <p class="dashboard-subtext">
+          Jump into your shared spaces and create
+          something worth remembering.
+        </p>
+
+      </div>
+
+
+      <!-- Members -->
+      <div class="mini-members">
+
+        <div class="mini-member">
+          <div class="mini-avatar" id="userAvatar">
+            🌊
+          </div>
+
+          <span id="usernameDisplay">You</span>
+        </div>
+
+        <div class="mini-connection">
+          ✦
+        </div>
+
+        <div class="mini-member">
+          <div class="mini-avatar friend-mini">
+            ?
+          </div>
+
+          <span>Waiting</span>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- Quick Access -->
+    <section class="quick-section">
+
+      <div class="section-heading">
+
+        <div>
+          <p class="eyebrow">QUICK ACCESS</p>
+          <h2>Enter a space</h2>
+        </div>
+
+      </div>
+
+
+      <div class="dashboard-grid">
+
+        <!-- Room -->
+        <a href="room.html" class="dashboard-card main-card">
+
+          <div class="card-icon">
+            🎥
+          </div>
+
+          <div class="card-content">
+            <h3>Room</h3>
+            <p>
+              Talk face-to-face, chat and share snaps.
+            </p>
+          </div>
+
+          <span class="card-arrow">→</span>
+
+        </a>
+
+
+        <!-- Cinema -->
+        <a href="cinema.html" class="dashboard-card">
+
+          <div class="card-icon">
+            🎬
+          </div>
+
+          <div class="card-content">
+            <h3>Cinema</h3>
+            <p>Watch something side by side.</p>
+          </div>
+
+          <span class="card-arrow">→</span>
+
+        </a>
+
+
+        <!-- Gallery -->
+        <a href="gallery.html" class="dashboard-card">
+
+          <div class="card-icon">
+            📸
+          </div>
+
+          <div class="card-content">
+            <h3>Gallery</h3>
+            <p>Your shared snaps and photos.</p>
+          </div>
+
+          <span class="card-arrow">→</span>
+
+        </a>
+
+
+        <!-- Memories -->
+        <a href="memories.html" class="dashboard-card">
+
+          <div class="card-icon">
+            ✨
+          </div>
+
+          <div class="card-content">
+            <h3>Memories</h3>
+            <p>Keep your favourite moments close.</p>
+          </div>
+
+          <span class="card-arrow">→</span>
+
+        </a>
+
+
+        <!-- Notes -->
+        <a href="notes.html" class="dashboard-card">
+
+          <div class="card-icon">
+            📝
+          </div>
+
+          <div class="card-content">
+            <h3>Notes</h3>
+            <p>Leave thoughts for each other.</p>
+          </div>
+
+          <span class="card-arrow">→</span>
+
+        </a>
+
+
+        <!-- Canvas -->
+        <a href="canvas.html" class="dashboard-card">
+
+          <div class="card-icon">
+            🎨
+          </div>
+
+          <div class="card-content">
+            <h3>Canvas</h3>
+            <p>Draw and create together.</p>
+          </div>
+
+          <span class="card-arrow">→</span>
+
+        </a>
+
+      </div>
+
+    </section>
+
+
+    <!-- Parallel Status -->
+    <section class="parallel-status glass">
+
+      <div class="status-left">
+
+        <div class="status-icon">
+          ✦
+        </div>
+
+        <div>
+          <p class="eyebrow">
+            YOUR PARALLEL
+          </p>
+
+          <h3>Room <span id="statusRoomCode">------</span></h3>
+        </div>
+
+      </div>
+
+      <div class="status-right">
+
+        <span class="status-online-dot"></span>
+
+        <span>
+          Shared space active
+        </span>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <footer>
+    <span>PARALLEL</span>
+    <p>Two worlds. One shared space.</p>
+  </footer>
+
+
+  <script src="js/dashboard.js"></script>
+
+</body>
+
+</html>
