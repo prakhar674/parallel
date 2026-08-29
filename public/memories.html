@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Memories — Parallel</title>
+
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/memories.css">
+</head>
+
+<body>
+
+  <div class="background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+
+  <!-- Navigation -->
+
+  <nav class="memories-nav">
+
+    <a href="dashboard.html" class="logo">
+      <div class="logo-icon">P</div>
+      <span>Parallel</span>
+    </a>
+
+    <div class="memories-room">
+      <span class="memory-dot"></span>
+      <span id="roomCodeDisplay">ROOM ------</span>
+    </div>
+
+    <a href="dashboard.html" class="back-btn">
+      ← Dashboard
+    </a>
+
+  </nav>
+
+
+  <main class="memories-container">
+
+    <!-- Header -->
+
+    <section class="memories-header">
+
+      <div>
+
+        <p class="eyebrow">
+          SHARED MEMORIES
+        </p>
+
+        <h1>
+          Keep the good <span>moments.</span>
+        </h1>
+
+        <p class="memories-subtext">
+          Turn little moments into memories you can
+          always come back to.
+        </p>
+
+      </div>
+
+      <button
+        class="add-memory-btn"
+        id="openMemoryModalBtn"
+      >
+        + Add Memory
+      </button>
+
+    </section>
+
+
+    <!-- Stats -->
+
+    <section class="memory-stats">
+
+      <div class="memory-stat glass">
+
+        <span
+          class="memory-stat-number"
+          id="memoryCount"
+        >
+          0
+        </span>
+
+        <span class="memory-stat-label">
+          Memories
+        </span>
+
+      </div>
+
+
+      <div class="memory-stat glass">
+
+        <span
+          class="memory-stat-number"
+          id="thisMonthCount"
+        >
+          0
+        </span>
+
+        <span class="memory-stat-label">
+          This month
+        </span>
+
+      </div>
+
+
+      <div class="memory-stat glass">
+
+        <span
+          class="memory-stat-number"
+          id="latestMemoryDate"
+        >
+          —
+        </span>
+
+        <span class="memory-stat-label">
+          Latest memory
+        </span>
+
+      </div>
+
+    </section>
+
+
+    <!-- Timeline -->
+
+    <section class="memories-section">
+
+      <div class="section-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            YOUR STORY
+          </p>
+
+          <h2>
+            Memory timeline
+          </h2>
+
+        </div>
+
+        <button
+          class="clear-memories-btn"
+          id="clearMemoriesBtn"
+        >
+          Clear Memories
+        </button>
+
+      </div>
+
+
+      <!-- Memories Grid -->
+
+      <div
+        class="memories-grid"
+        id="memoriesGrid"
+      >
+
+        <!-- Empty State -->
+
+        <div
+          class="memories-empty"
+          id="memoriesEmpty"
+        >
+
+          <div class="empty-memory-icon">
+            ✦
+          </div>
+
+          <h2>
+            No memories yet.
+          </h2>
+
+          <p>
+            Add your first moment and start building
+            your story in Parallel.
+          </p>
+
+          <button
+            class="empty-add-memory-btn"
+            id="emptyAddMemoryBtn"
+          >
+            + Create a memory
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- Quote Card -->
+
+    <section class="memory-quote glass">
+
+      <div class="quote-icon">
+        ✦
+      </div>
+
+      <div>
+
+        <p class="eyebrow">
+          PARALLEL MEMORY
+        </p>
+
+        <h2>
+          Some moments deserve more than a screenshot.
+        </h2>
+
+        <p>
+          Save the little things before they become
+          the stories you tell later.
+        </p>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- Add Memory Modal -->
+
+  <div
+    class="memory-modal"
+    id="memoryModal"
+  >
+
+    <div class="memory-modal-card">
+
+      <button
+        class="close-memory-modal"
+        id="closeMemoryModalBtn"
+      >
+        ×
+      </button>
+
+
+      <p class="eyebrow">
+        NEW MEMORY
+      </p>
+
+      <h2>
+        Save this moment.
+      </h2>
+
+
+      <form id="memoryForm">
+
+        <!-- Photo -->
+
+        <label class="memory-photo-upload">
+
+          <input
+            type="file"
+            id="memoryPhotoInput"
+            accept="image/*"
+            hidden
+          >
+
+          <div id="memoryPhotoPreview">
+
+            <span>📸</span>
+
+            <p>
+              Add a photo
+            </p>
+
+          </div>
+
+        </label>
+
+
+        <!-- Title -->
+
+        <input
+          type="text"
+          id="memoryTitle"
+          placeholder="Give this memory a title..."
+          maxlength="50"
+          required
+        >
+
+
+        <!-- Date -->
+
+        <input
+          type="date"
+          id="memoryDate"
+          required
+        >
+
+
+        <!-- Description -->
+
+        <textarea
+          id="memoryDescription"
+          placeholder="What happened?"
+          maxlength="250"
+        ></textarea>
+
+
+        <button
+          type="submit"
+          class="save-memory-btn"
+        >
+          Save Memory ✦
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+  <!-- Fullscreen Memory Viewer -->
+
+  <div
+    class="memory-viewer"
+    id="memoryViewer"
+  >
+
+    <button
+      class="close-memory-viewer"
+      id="closeMemoryViewerBtn"
+    >
+      ×
+    </button>
+
+    <div
+      class="memory-viewer-content"
+      id="memoryViewerContent"
+    >
+    </div>
+
+  </div>
+
+
+  <script src="js/memories.js"></script>
+
+</body>
+
+</html>
