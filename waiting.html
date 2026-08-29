@@ -1,0 +1,98 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <title>Waiting Room — Parallel</title>  <link rel="stylesheet" href="waiting.css">
+</head><body>  <div class="background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="grid"></div>
+  </div>  <nav class="navbar">
+    <a href="index.html" class="logo">
+      <div class="logo-icon">P</div>
+      <span>Parallel</span>
+    </a><div class="room-status">
+  <span class="status-dot"></span>
+  <span>PRIVATE ROOM</span>
+</div>
+
+  </nav>  <main class="waiting-container"><section class="waiting-card">
+
+  <div class="waiting-icon">
+    <div class="pulse-ring"></div>
+    <span>✦</span>
+  </div>
+
+  <p class="eyebrow">YOUR SPACE IS READY</p>
+
+  <h1>Waiting for your<br><span>other half.</span></h1>
+
+  <p class="description">
+    Share your room code with a friend. Once they join,
+    you'll both enter your Parallel space.
+  </p>
+
+  <div class="code-box">
+
+    <div class="code-label">
+      <span>ROOM CODE</span>
+      <span class="secure">🔒 PRIVATE</span>
+    </div>
+
+    <div class="code-row">
+      <div id="displayRoomCode" class="room-code">------</div>
+
+      <button id="copyCodeBtn" class="copy-btn" title="Copy room code">
+        Copy
+      </button>
+    </div>
+
+  </div>
+
+  <button id="shareBtn" class="share-btn">
+    ↗ Share Invite
+  </button>
+
+  <div class="people-status">
+
+    <div class="person joined">
+      <div class="person-avatar">👤</div>
+
+      <div>
+        <strong id="hostName">You</strong>
+        <span>
+          <i></i>
+          Ready
+        </span>
+      </div>
+    </div>
+
+    <div class="connection">
+      <div class="connection-dot"></div>
+    </div>
+
+    <div class="person waiting">
+      <div class="person-avatar empty">?</div>
+
+      <div>
+        <strong>Waiting...</strong>
+        <span>Friend has not joined</span>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="hint">
+    Keep this page open while your friend joins.
+  </p>
+
+  <button id="enterRoomBtn" class="enter-btn">
+    Enter Room →
+  </button>
+
+</section>
+
+  </main>  <footer>
+    <span>PARALLEL</span>
+    <p>Two people. One shared space.</p>
+  </footer>  <script src="waiting.js"></script></body>
+</html>
