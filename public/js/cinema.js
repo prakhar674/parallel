@@ -1,150 +1,471 @@
-const roomCode = localStorage.getItem("roomCode");
-const username = localStorage.getItem("username") || "You";
-const userAvatar = localStorage.getItem("userAvatar") || "🌊";
+const socket = io();
 
-/* Protect page */
+const roomCode = localStorage.getItem("roomCode");
+const username = localStorage.getItem("username") || "Guest";
 
 if (!roomCode) {
   window.location.href = "index.html";
 }
 
-/* Elements */
 
-const roomCodeDisplay = document.getElementById("roomCodeDisplay");
-const usernameDisplay = document.getElementById("usernameDisplay");
-const userAvatarDisplay = document.getElementById("userAvatar");
+/* =========================
+   JOIN PARALLEL ROOM
+========================= */
 
-const cinemaVideo = document.getElementById("cinemaVideo");
-const cinemaPlaceholder = document.getElementById("cinemaPlaceholder");
-const videoInput = document.getElementById("videoInput");
-
-const videoTitle = document.getElementById("videoTitle");
-const playPauseBtn = document.getElementById("playPauseBtn");
-const restartBtn = document.getElementById("restartBtn");
-
-const cinemaChatForm = document.getElementById("cinemaChatForm");
-const cinemaChatInput = document.getElementById("cinemaChatInput");
-const cinemaMessages = document.getElementById("cinemaMessages");
-
-/* Display saved data */
-
-roomCodeDisplay.textContent = `ROOM ${roomCode}`;
-usernameDisplay.textContent = username;
-userAvatarDisplay.textContent = userAvatar;
-
-
-/* Choose video */
-
-videoInput.addEventListener("change", () => {
-  const file = videoInput.files[0];
-
-  if (!file) return;
-
-  const videoURL = URL.createObjectURL(file);
-
-  cinemaVideo.src = videoURL;
-  cinemaVideo.load();
-
-  cinemaPlaceholder.style.display = "none";
-
-  videoTitle.textContent = file.name;
-
-  cinemaVideo.play()
-    .then(() => {
-      playPauseBtn.textContent = "❚❚";
-    })
-    .catch(() => {
-      playPauseBtn.textContent = "▶";
-    });
+socket.emit("join-room", {
+  roomCode,
+  username,
+  avatar: localStorage.getItem("userAvatar") || "🌊"
 });
 
 
-/* Play / Pause */
+/* =========================
+   ELEMENTS
+========================= */
 
-playPauseBtn.addEventListener("click", () => {
+const roomCodeDisplay =
+  document.getElementById("roomCodeDisplay");
 
-  if (!cinemaVideo.src) return;
+const cinemaVideo =
+  document.getElementById("cinemaVideo");
 
-  if (cinemaVideo.paused) {
+const videoInput =
+  document.getElementById("videoInput");
 
-    cinemaVideo.play();
-    playPauseBtn.textContent = "❚❚";
+const videoTitle =
+  document.getElementById("videoTitle");
 
-  } else {
+const playBtn =
+  document.getElementById("playBtn");
 
-    cinemaVideo.pause();
-    playPauseBtn.textContent = "▶";
+const pauseBtn =
+  document.getElementById("pauseBtn");
 
+const restartBtn =
+  document.getElementById("restartBtn");
+
+const cinemaStatus =
+  document.getElementById("cinemaStatus");
+
+
+/* =========================
+   DISPLAY ROOM
+========================= */
+
+if (roomCodeDisplay) {
+  roomCodeDisplay.textContent =
+    `ROOM ${roomCode}`;
+}
+
+
+/* =========================
+   PREVENT SYNC LOOP
+========================= */
+
+let syncingFromRemote = false;
+
+
+/* =========================
+   UPDATE STATUS
+========================= */
+
+function updateStatus(text) {
+
+  if (cinemaStatus) {
+    cinemaStatus.textContent = text;
   }
 
-});
+}
 
 
-/* Restart video */
+/* =========================
+   SEND SYNC EVENT
+========================= */
 
-restartBtn.addEventListener("click", () => {
+function sendCinemaSync(
+  action,
+  currentTime,
+  videoName
+) {
 
-  if (!cinemaVideo.src) return;
+  socket.emit("cinema-sync", {
 
-  cinemaVideo.currentTime = 0;
+    roomCode,
 
-  cinemaVideo.play();
+    action,
 
-  playPauseBtn.textContent = "❚❚";
+    currentTime,
 
-});
+    videoName
 
+  });
 
-/* Keep button synced */
-
-cinemaVideo.addEventListener("play", () => {
-  playPauseBtn.textContent = "❚❚";
-});
-
-cinemaVideo.addEventListener("pause", () => {
-  playPauseBtn.textContent = "▶";
-});
-
-cinemaVideo.addEventListener("ended", () => {
-  playPauseBtn.textContent = "▶";
-});
+}
 
 
-/* Cinema chat */
+/* =========================
+   VIDEO SELECT
+========================= */
 
-cinemaChatForm.addEventListener("submit", (event) => {
+if (videoInput) {
 
-  event.preventDefault();
+  videoInput.addEventListener(
+    "change",
+    () => {
 
-  const message = cinemaChatInput.value.trim();
+      const file =
+        videoInput.files[0];
 
-  if (!message) return;
+      if (!file) return;
 
 
-  /* Remove empty state */
+      const videoURL =
+        URL.createObjectURL(file);
 
-  const emptyChat = document.querySelector(".empty-cinema-chat");
+      cinemaVideo.src =
+        videoURL;
 
-  if (emptyChat) {
-    emptyChat.remove();
+
+      if (videoTitle) {
+        videoTitle.textContent =
+          file.name;
+      }
+
+
+      updateStatus(
+        "Video selected"
+      );
+
+
+      /*
+        IMPORTANT:
+        Only the name is synced.
+        Each user must have access
+        to the same video locally.
+      */
+
+      sendCinemaSync(
+        "video-selected",
+        0,
+        file.name
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================
+   PLAY
+========================= */
+
+if (playBtn) {
+
+  playBtn.addEventListener(
+    "click",
+    async () => {
+
+      try {
+
+        await cinemaVideo.play();
+
+        updateStatus(
+          "Playing together"
+        );
+
+
+        if (!syncingFromRemote) {
+
+          sendCinemaSync(
+            "play",
+            cinemaVideo.currentTime,
+            videoTitle
+              ? videoTitle.textContent
+              : ""
+          );
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "Video play error:",
+          error
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================
+   PAUSE
+========================= */
+
+if (pauseBtn) {
+
+  pauseBtn.addEventListener(
+    "click",
+    () => {
+
+      cinemaVideo.pause();
+
+      updateStatus(
+        "Paused"
+      );
+
+
+      if (!syncingFromRemote) {
+
+        sendCinemaSync(
+          "pause",
+          cinemaVideo.currentTime,
+          videoTitle
+            ? videoTitle.textContent
+            : ""
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================
+   RESTART
+========================= */
+
+if (restartBtn) {
+
+  restartBtn.addEventListener(
+    "click",
+    async () => {
+
+      cinemaVideo.currentTime = 0;
+
+      try {
+        await cinemaVideo.play();
+      } catch (error) {
+        console.error(error);
+      }
+
+
+      updateStatus(
+        "Restarted"
+      );
+
+
+      if (!syncingFromRemote) {
+
+        sendCinemaSync(
+          "restart",
+          0,
+          videoTitle
+            ? videoTitle.textContent
+            : ""
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================
+   SEEK SYNC
+========================= */
+
+cinemaVideo.addEventListener(
+  "seeked",
+  () => {
+
+    if (syncingFromRemote) return;
+
+
+    sendCinemaSync(
+      "seek",
+      cinemaVideo.currentTime,
+      videoTitle
+        ? videoTitle.textContent
+        : ""
+    );
+
   }
+);
 
 
-  /* Create message */
+/* =========================
+   RECEIVE REAL-TIME SYNC
+========================= */
 
-  const messageElement = document.createElement("div");
+socket.on(
+  "cinema-sync",
+  async ({
+    action,
+    currentTime,
+    videoName
+  }) => {
 
-  messageElement.className = "cinema-message own-cinema-message";
-
-  messageElement.textContent = message;
-
-  cinemaMessages.appendChild(messageElement);
+    if (!cinemaVideo) return;
 
 
-  /* Clear input */
+    syncingFromRemote = true;
 
-  cinemaChatInput.value = "";
 
-  cinemaMessages.scrollTop = cinemaMessages.scrollHeight;
+    try {
 
-});
+      if (
+        typeof currentTime === "number"
+      ) {
+
+        cinemaVideo.currentTime =
+          currentTime;
+
+      }
+
+
+      switch (action) {
+
+        case "play":
+
+          await cinemaVideo.play();
+
+          updateStatus(
+            "Playing together"
+          );
+
+          break;
+
+
+        case "pause":
+
+          cinemaVideo.pause();
+
+          updateStatus(
+            "Paused by your friend"
+          );
+
+          break;
+
+
+        case "restart":
+
+          cinemaVideo.currentTime = 0;
+
+          await cinemaVideo.play();
+
+          updateStatus(
+            "Restarted together"
+          );
+
+          break;
+
+
+        case "seek":
+
+          updateStatus(
+            "Synced"
+          );
+
+          break;
+
+
+        case "video-selected":
+
+          /*
+            Remote user cannot receive
+            the actual local video file.
+          */
+
+          if (videoTitle) {
+
+            videoTitle.textContent =
+              `${videoName} — select this video`;
+
+          }
+
+          updateStatus(
+            "Friend selected a video"
+          );
+
+          break;
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Cinema sync error:",
+        error
+      );
+
+    }
+
+
+    setTimeout(
+      () => {
+
+        syncingFromRemote = false;
+
+      },
+      100
+    );
+
+  }
+);
+
+
+/* =========================
+   VIDEO ENDED
+========================= */
+
+if (cinemaVideo) {
+
+  cinemaVideo.addEventListener(
+    "ended",
+    () => {
+
+      updateStatus(
+        "Movie ended"
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================
+   CONNECTION STATUS
+========================= */
+
+socket.on(
+  "connect",
+  () => {
+
+    console.log(
+      "Cinema connected to Parallel"
+    );
+
+  }
+);
+
+
+socket.on(
+  "user-joined",
+  (user) => {
+
+    updateStatus(
+      `${user.username} joined`
+    );
+
+  }
+);
