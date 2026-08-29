@@ -1,3 +1,4 @@
+const socket = io();
 const createBtn = document.getElementById("createBtn");
 const joinBtn = document.getElementById("joinBtn");
 const joinPanel = document.getElementById("joinPanel");
