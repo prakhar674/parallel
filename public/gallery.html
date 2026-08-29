@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Gallery — Parallel</title>
+
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/gallery.css">
+</head>
+
+<body>
+
+  <div class="background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+
+  <!-- Navigation -->
+
+  <nav class="gallery-nav">
+
+    <a href="dashboard.html" class="logo">
+      <div class="logo-icon">P</div>
+      <span>Parallel</span>
+    </a>
+
+    <div class="gallery-room">
+      <span class="gallery-dot"></span>
+      <span id="roomCodeDisplay">ROOM ------</span>
+    </div>
+
+    <a href="dashboard.html" class="back-btn">
+      ← Dashboard
+    </a>
+
+  </nav>
+
+
+  <main class="gallery-container">
+
+    <!-- Header -->
+
+    <section class="gallery-header">
+
+      <div>
+        <p class="eyebrow">SHARED GALLERY</p>
+
+        <h1>Moments in <span>Parallel.</span></h1>
+
+        <p>
+          Every snap, capture and little memory —
+          all in one place.
+        </p>
+      </div>
+
+
+      <label for="galleryInput" class="add-photo-btn">
+        + Add Photo
+      </label>
+
+      <input
+        type="file"
+        id="galleryInput"
+        accept="image/*"
+        multiple
+        hidden
+      >
+
+    </section>
+
+
+    <!-- Stats -->
+
+    <section class="gallery-stats">
+
+      <div class="stat-card glass">
+        <span class="stat-number" id="photoCount">0</span>
+        <span class="stat-label">Photos</span>
+      </div>
+
+      <div class="stat-card glass">
+        <span class="stat-number" id="todayCount">0</span>
+        <span class="stat-label">Added today</span>
+      </div>
+
+      <div class="stat-card glass">
+        <span class="stat-number">✦</span>
+        <span class="stat-label">Shared memories</span>
+      </div>
+
+    </section>
+
+
+    <!-- Gallery -->
+
+    <section class="gallery-section">
+
+      <div class="section-heading">
+
+        <div>
+          <p class="eyebrow">YOUR MOMENTS</p>
+          <h2>Gallery</h2>
+        </div>
+
+        <button id="clearGalleryBtn" class="clear-gallery-btn">
+          Clear Gallery
+        </button>
+
+      </div>
+
+
+      <div class="photo-grid" id="photoGrid">
+
+        <!-- Empty state -->
+
+        <div class="gallery-empty" id="galleryEmpty">
+
+          <div class="empty-icon">
+            📸
+          </div>
+
+          <h2>No memories yet.</h2>
+
+          <p>
+            Add your first photo and start building
+            your Parallel gallery.
+          </p>
+
+          <label for="galleryInput" class="empty-add-btn">
+            Add a photo
+          </label>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- Memory Footer Card -->
+
+    <section class="memory-card glass">
+
+      <div class="memory-icon">
+        ✦
+      </div>
+
+      <div>
+        <p class="eyebrow">PARALLEL MEMORY</p>
+
+        <h2>
+          The best moments are the ones you keep.
+        </h2>
+
+        <p>
+          Your gallery grows with every shared moment.
+        </p>
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- Photo Viewer -->
+
+  <div class="photo-modal" id="photoModal">
+
+    <button id="closeModalBtn" class="close-modal">
+      ×
+    </button>
+
+    <img id="modalImage" src="" alt="Gallery preview">
+
+  </div>
+
+
+  <script src="js/gallery.js"></script>
+
+</body>
+
+</html>
