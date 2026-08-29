@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Canvas — Parallel</title>
+
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/canvas.css">
+</head>
+
+<body>
+
+  <div class="background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+
+  <!-- Navigation -->
+
+  <nav class="canvas-nav">
+
+    <a href="dashboard.html" class="logo">
+      <div class="logo-icon">P</div>
+      <span>Parallel</span>
+    </a>
+
+    <div class="canvas-room">
+      <span class="canvas-dot"></span>
+      <span id="roomCodeDisplay">ROOM ------</span>
+    </div>
+
+    <a href="dashboard.html" class="back-btn">
+      ← Dashboard
+    </a>
+
+  </nav>
+
+
+  <main class="canvas-container">
+
+    <!-- Header -->
+
+    <section class="canvas-header">
+
+      <div>
+        <p class="eyebrow">SHARED CANVAS</p>
+
+        <h1>Create in <span>Parallel.</span></h1>
+
+        <p>
+          Draw, doodle and create together in one shared space.
+        </p>
+      </div>
+
+      <div class="canvas-status">
+        <span></span>
+        <span id="canvasStatus">Canvas ready</span>
+      </div>
+
+    </section>
+
+
+    <!-- Drawing App -->
+
+    <section class="canvas-app glass">
+
+      <!-- Toolbar -->
+
+      <aside class="canvas-toolbar">
+
+        <div class="tool-group">
+
+          <span class="tool-label">COLOR</span>
+
+          <input
+            type="color"
+            id="colorPicker"
+            value="#66e3ff"
+          >
+
+        </div>
+
+
+        <div class="tool-group">
+
+          <span class="tool-label">BRUSH</span>
+
+          <input
+            type="range"
+            id="brushSize"
+            min="1"
+            max="50"
+            value="5"
+          >
+
+          <span id="brushSizeValue">
+            5px
+          </span>
+
+        </div>
+
+
+        <div class="tool-actions">
+
+          <button
+            id="eraserBtn"
+            class="canvas-tool-btn"
+            title="Eraser"
+          >
+            ◌
+          </button>
+
+          <button
+            id="clearCanvasBtn"
+            class="canvas-tool-btn danger"
+            title="Clear Canvas"
+          >
+            🗑
+          </button>
+
+        </div>
+
+      </aside>
+
+
+      <!-- Canvas -->
+
+      <div class="drawing-area">
+
+        <canvas id="drawingCanvas">
+          Your browser does not support canvas.
+        </canvas>
+
+        <div
+          class="canvas-empty"
+          id="canvasEmpty"
+        >
+          <span>✦</span>
+          <p>Start drawing something.</p>
+        </div>
+
+      </div>
+
+
+      <!-- Bottom Controls -->
+
+      <div class="canvas-bottom-bar">
+
+        <div class="canvas-info">
+
+          <span class="canvas-avatar" id="userAvatar">
+            🌊
+          </span>
+
+          <div>
+            <strong id="usernameDisplay">You</strong>
+            <small>Drawing in this room</small>
+          </div>
+
+        </div>
+
+
+        <div class="canvas-actions">
+
+          <button
+            id="undoBtn"
+            class="bottom-action-btn"
+          >
+            ↶ Undo
+          </button>
+
+          <button
+            id="saveCanvasBtn"
+            class="bottom-action-btn primary-action"
+          >
+            ↓ Save Drawing
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- Info Cards -->
+
+    <section class="canvas-info-grid">
+
+      <div class="canvas-info-card glass">
+        <span>✦</span>
+        <h3>Shared space</h3>
+        <p>
+          Create something together in your Parallel room.
+        </p>
+      </div>
+
+      <div class="canvas-info-card glass">
+        <span>🎨</span>
+        <h3>Make it yours</h3>
+        <p>
+          Change colors, brush size and erase whenever you want.
+        </p>
+      </div>
+
+      <div class="canvas-info-card glass">
+        <span>💾</span>
+        <h3>Keep it</h3>
+        <p>
+          Save your finished creation as a memory.
+        </p>
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <script src="js/canvas.js"></script>
+
+</body>
+
+</html>
