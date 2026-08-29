@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Home — Parallel</title>
+
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/home.css">
+</head>
+
+<body>
+
+  <!-- Background -->
+  <div class="background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="home-nav">
+
+    <a href="home.html" class="logo">
+      <div class="logo-icon">P</div>
+      <span>Parallel</span>
+    </a>
+
+    <div class="room-pill">
+      <span class="room-dot"></span>
+      <span id="roomCodeDisplay">ROOM ------</span>
+    </div>
+
+  </nav>
+
+
+  <main class="home-container">
+
+    <!-- Welcome -->
+    <section class="welcome-section">
+
+      <div>
+        <p class="eyebrow">WELCOME BACK</p>
+
+        <h1 class="page-title">
+          Hey, <span id="usernameDisplay">You</span> 👋
+        </h1>
+
+        <p>
+          Your shared space is ready.
+          Everything you both create lives here.
+        </p>
+      </div>
+
+      <div class="profile-avatar" id="userAvatar">
+        🌊
+      </div>
+
+    </section>
+
+
+    <!-- Parallel Card -->
+    <section class="parallel-home-card glass">
+
+      <div class="parallel-card-header">
+
+        <div>
+          <p class="eyebrow">YOUR SHARED SPACE</p>
+          <h2>Our Parallel ✦</h2>
+        </div>
+
+        <span class="private-badge">
+          🔒 PRIVATE
+        </span>
+
+      </div>
+
+
+      <div class="members">
+
+        <!-- Current User -->
+        <div class="member-card">
+
+          <div class="member-avatar" id="memberAvatar">
+            🌊
+          </div>
+
+          <div>
+            <strong id="memberName">You</strong>
+            <span>
+              <i></i>
+              You
+            </span>
+          </div>
+
+        </div>
+
+
+        <div class="connection-line">
+          <span>✦</span>
+        </div>
+
+
+        <!-- Friend -->
+        <div class="member-card friend-card">
+
+          <div class="member-avatar friend-avatar">
+            ?
+          </div>
+
+          <div>
+            <strong>Waiting...</strong>
+            <span>Invite someone</span>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- Invite -->
+      <div class="invite-box">
+
+        <div>
+          <small>INVITE CODE</small>
+          <strong id="inviteCode">------</strong>
+        </div>
+
+        <button id="copyInviteBtn" class="secondary-btn">
+          Copy Code
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- Spaces -->
+    <section class="spaces-section">
+
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">EXPLORE TOGETHER</p>
+          <h2>Your Spaces</h2>
+        </div>
+      </div>
+
+
+      <div class="spaces-grid">
+
+        <a href="dashboard.html" class="space-card featured">
+          <div class="space-icon">✦</div>
+
+          <div>
+            <h3>Shared Dashboard</h3>
+            <p>Your complete Parallel overview.</p>
+          </div>
+
+          <span class="arrow">→</span>
+        </a>
+
+
+        <a href="room.html" class="space-card">
+          <div class="space-icon">🎥</div>
+
+          <div>
+            <h3>Room</h3>
+            <p>Talk, chat and share snaps.</p>
+          </div>
+
+          <span class="arrow">→</span>
+        </a>
+
+
+        <a href="cinema.html" class="space-card">
+          <div class="space-icon">🎬</div>
+
+          <div>
+            <h3>Cinema</h3>
+            <p>Watch something together.</p>
+          </div>
+
+          <span class="arrow">→</span>
+        </a>
+
+
+        <a href="gallery.html" class="space-card">
+          <div class="space-icon">📸</div>
+
+          <div>
+            <h3>Gallery</h3>
+            <p>All your shared moments.</p>
+          </div>
+
+          <span class="arrow">→</span>
+        </a>
+
+
+        <a href="memories.html" class="space-card">
+          <div class="space-icon">✨</div>
+
+          <div>
+            <h3>Memories</h3>
+            <p>Save the moments that matter.</p>
+          </div>
+
+          <span class="arrow">→</span>
+        </a>
+
+
+        <a href="notes.html" class="space-card">
+          <div class="space-icon">📝</div>
+
+          <div>
+            <h3>Notes</h3>
+            <p>Write things together.</p>
+          </div>
+
+          <span class="arrow">→</span>
+        </a>
+
+
+        <a href="canvas.html" class="space-card">
+          <div class="space-icon">🎨</div>
+
+          <div>
+            <h3>Canvas</h3>
+            <p>Create something together.</p>
+          </div>
+
+          <span class="arrow">→</span>
+        </a>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <footer>
+    <span>PARALLEL</span>
+    <p>Two worlds. Side by side.</p>
+  </footer>
+
+
+  <script src="js/home.js"></script>
+
+</body>
+</html>
