@@ -1,188 +1,594 @@
-const roomCode = localStorage.getItem("roomCode");
-const username = localStorage.getItem("username") || "You";
-const userAvatar = localStorage.getItem("userAvatar") || "🌊";
+const socket = io();
 
-/* Protect page */
+const roomCode = localStorage.getItem("roomCode");
+const username = localStorage.getItem("username") || "Guest";
+const avatar = localStorage.getItem("userAvatar") || "🌊";
 
 if (!roomCode) {
   window.location.href = "index.html";
 }
 
-/* Elements */
 
-const localVideo = document.getElementById("localVideo");
-const localPlaceholder = document.getElementById("localPlaceholder");
+/* -------------------- ROOM JOIN -------------------- */
 
-const startCameraBtn = document.getElementById("startCameraBtn");
-const toggleMicBtn = document.getElementById("toggleMicBtn");
-const toggleCameraBtn = document.getElementById("toggleCameraBtn");
-const leaveRoomBtn = document.getElementById("leaveRoomBtn");
+socket.emit("join-room", {
+  roomCode,
+  username,
+  avatar
+});
 
-const roomCodeDisplay = document.getElementById("roomCodeDisplay");
-const usernameDisplay = document.getElementById("usernameDisplay");
-const userAvatarDisplay = document.getElementById("userAvatar");
 
-const chatForm = document.getElementById("chatForm");
-const chatInput = document.getElementById("chatInput");
-const messages = document.getElementById("messages");
-
-const snapInput = document.getElementById("snapInput");
-const snapPreview = document.getElementById("snapPreview");
-const captureSnapBtn = document.getElementById("captureSnapBtn");
+/* -------------------- WEBRTC -------------------- */
 
 let localStream = null;
-let micEnabled = true;
-let cameraEnabled = true;
+let peerConnection = null;
+let remoteUserId = null;
 
-/* Display user data */
+const rtcConfig = {
+  iceServers: [
+    {
+      urls: "stun:stun.l.google.com:19302"
+    }
+  ]
+};
 
-roomCodeDisplay.textContent = `ROOM ${roomCode}`;
-usernameDisplay.textContent = username;
-userAvatarDisplay.textContent = userAvatar;
+
+/* -------------------- ELEMENTS -------------------- */
+
+const localVideo = document.getElementById("localVideo");
+const remoteVideo = document.getElementById("remoteVideo");
+
+const roomCodeDisplay =
+  document.getElementById("roomCodeDisplay");
+
+const membersContainer =
+  document.getElementById("membersContainer");
+
+const messagesContainer =
+  document.getElementById("messagesContainer");
+
+const messageInput =
+  document.getElementById("messageInput");
+
+const sendMessageBtn =
+  document.getElementById("sendMessageBtn");
+
+const micBtn =
+  document.getElementById("micBtn");
+
+const cameraBtn =
+  document.getElementById("cameraBtn");
+
+const callBtn =
+  document.getElementById("callBtn");
+
+const leaveBtn =
+  document.getElementById("leaveBtn");
 
 
-/* Start Camera */
+if (roomCodeDisplay) {
+  roomCodeDisplay.textContent = `ROOM ${roomCode}`;
+}
 
-startCameraBtn.addEventListener("click", async () => {
+
+/* -------------------- CAMERA + MIC -------------------- */
+
+async function startLocalMedia() {
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true
-    });
+    localStream =
+      await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+      });
 
-    localVideo.srcObject = localStream;
-
-    localPlaceholder.style.display = "none";
-
-    startCameraBtn.textContent = "Camera On ✓";
+    if (localVideo) {
+      localVideo.srcObject = localStream;
+    }
 
   } catch (error) {
-    alert("Camera or microphone permission was not granted.");
+
+    console.error(
+      "Camera/Microphone error:",
+      error
+    );
+
+    alert(
+      "Camera or microphone permission was denied."
+    );
   }
-});
+}
+
+startLocalMedia();
 
 
-/* Toggle microphone */
+/* -------------------- CREATE PEER -------------------- */
 
-toggleMicBtn.addEventListener("click", () => {
-  if (!localStream) return;
+function createPeerConnection() {
 
-  micEnabled = !micEnabled;
+  peerConnection =
+    new RTCPeerConnection(rtcConfig);
 
-  localStream.getAudioTracks().forEach((track) => {
-    track.enabled = micEnabled;
-  });
-
-  toggleMicBtn.textContent = micEnabled ? "🎙️" : "🔇";
-});
-
-
-/* Toggle camera */
-
-toggleCameraBtn.addEventListener("click", () => {
-  if (!localStream) return;
-
-  cameraEnabled = !cameraEnabled;
-
-  localStream.getVideoTracks().forEach((track) => {
-    track.enabled = cameraEnabled;
-  });
-
-  toggleCameraBtn.textContent = cameraEnabled ? "📹" : "🚫";
-});
-
-
-/* Leave Room */
-
-leaveRoomBtn.addEventListener("click", () => {
 
   if (localStream) {
-    localStream.getTracks().forEach((track) => {
-      track.stop();
-    });
+
+    localStream.getTracks().forEach(
+      (track) => {
+
+        peerConnection.addTrack(
+          track,
+          localStream
+        );
+
+      }
+    );
+
   }
 
-  window.location.href = "dashboard.html";
 
-});
+  peerConnection.ontrack =
+    (event) => {
+
+      if (remoteVideo) {
+        remoteVideo.srcObject =
+          event.streams[0];
+      }
+
+    };
 
 
-/* Local Chat */
+  peerConnection.onicecandidate =
+    (event) => {
 
-chatForm.addEventListener("submit", (event) => {
-  event.preventDefault();
+      if (
+        event.candidate &&
+        remoteUserId
+      ) {
 
-  const message = chatInput.value.trim();
+        socket.emit("ice-candidate", {
+          candidate: event.candidate,
+          target: remoteUserId
+        });
+
+      }
+
+    };
+
+
+  peerConnection.onconnectionstatechange =
+    () => {
+
+      console.log(
+        "Connection:",
+        peerConnection.connectionState
+      );
+
+    };
+
+}
+
+
+/* -------------------- ROOM MEMBERS -------------------- */
+
+socket.on(
+  "room-members",
+  (members) => {
+
+    if (!membersContainer) return;
+
+    membersContainer.innerHTML = "";
+
+    members.forEach((member) => {
+
+      const memberElement =
+        document.createElement("div");
+
+      memberElement.className =
+        "room-member";
+
+      memberElement.innerHTML = `
+        <span>${member.avatar}</span>
+        <small>
+          ${member.username}
+        </small>
+      `;
+
+      membersContainer.appendChild(
+        memberElement
+      );
+
+
+      if (
+        member.id !== socket.id
+      ) {
+
+        remoteUserId = member.id;
+
+      }
+
+    });
+
+  }
+);
+
+
+/* -------------------- USER JOINED -------------------- */
+
+socket.on(
+  "user-joined",
+  (user) => {
+
+    remoteUserId = user.id;
+
+    console.log(
+      "User joined:",
+      user.username
+    );
+
+  }
+);
+
+
+/* -------------------- LIVE CHAT -------------------- */
+
+function sendMessage() {
+
+  const message =
+    messageInput.value.trim();
 
   if (!message) return;
 
-  const emptyChat = document.querySelector(".empty-chat");
 
-  if (emptyChat) {
-    emptyChat.remove();
-  }
-
-  const messageElement = document.createElement("div");
-
-  messageElement.className = "message own-message";
-
-  messageElement.textContent = message;
-
-  messages.appendChild(messageElement);
-
-  chatInput.value = "";
-
-  messages.scrollTop = messages.scrollHeight;
-});
+  socket.emit("send-message", {
+    roomCode,
+    message,
+    username,
+    avatar
+  });
 
 
-/* Upload Snap */
+  messageInput.value = "";
 
-snapInput.addEventListener("change", () => {
-  const file = snapInput.files[0];
-
-  if (!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = (event) => {
-    snapPreview.innerHTML = `
-      <img src="${event.target.result}" alt="Shared snap">
-    `;
-  };
-
-  reader.readAsDataURL(file);
-});
+}
 
 
-/* Capture Snap */
+function displayMessage(data) {
 
-captureSnapBtn.addEventListener("click", () => {
+  if (!messagesContainer) return;
 
-  if (!localStream) {
-    alert("Start your camera first.");
-    return;
-  }
+  const messageElement =
+    document.createElement("div");
 
-  const canvas = document.createElement("canvas");
+  const isMine =
+    data.senderId === socket.id;
 
-  canvas.width = localVideo.videoWidth;
-  canvas.height = localVideo.videoHeight;
+  messageElement.className =
+    isMine
+      ? "chat-message mine"
+      : "chat-message";
 
-  const context = canvas.getContext("2d");
 
-  context.drawImage(
-    localVideo,
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
+  messageElement.innerHTML = `
+    <span class="message-avatar">
+      ${data.avatar}
+    </span>
 
-  const imageData = canvas.toDataURL("image/png");
+    <div>
+      <strong>
+        ${isMine ? "You" : data.username}
+      </strong>
 
-  snapPreview.innerHTML = `
-    <img src="${imageData}" alt="Captured snap">
+      <p>
+        ${data.message}
+      </p>
+    </div>
   `;
 
-});
+
+  messagesContainer.appendChild(
+    messageElement
+  );
+
+  messagesContainer.scrollTop =
+    messagesContainer.scrollHeight;
+
+}
+
+
+socket.on(
+  "receive-message",
+  displayMessage
+);
+
+
+if (sendMessageBtn) {
+
+  sendMessageBtn.addEventListener(
+    "click",
+    sendMessage
+  );
+
+}
+
+
+if (messageInput) {
+
+  messageInput.addEventListener(
+    "keydown",
+    (event) => {
+
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+
+    }
+  );
+
+}
+
+
+/* -------------------- START CALL -------------------- */
+
+if (callBtn) {
+
+  callBtn.addEventListener(
+    "click",
+    async () => {
+
+      if (!remoteUserId) {
+
+        alert(
+          "Waiting for someone else to join the room."
+        );
+
+        return;
+
+      }
+
+
+      if (!localStream) {
+
+        alert(
+          "Camera is not ready yet."
+        );
+
+        return;
+
+      }
+
+
+      createPeerConnection();
+
+
+      const offer =
+        await peerConnection.createOffer();
+
+      await peerConnection.setLocalDescription(
+        offer
+      );
+
+
+      socket.emit("webrtc-offer", {
+        roomCode,
+        offer,
+        target: remoteUserId
+      });
+
+    }
+  );
+
+}
+
+
+/* -------------------- RECEIVE OFFER -------------------- */
+
+socket.on(
+  "webrtc-offer",
+  async ({
+    offer,
+    sender
+  }) => {
+
+    remoteUserId = sender;
+
+    createPeerConnection();
+
+    await peerConnection.setRemoteDescription(
+      new RTCSessionDescription(offer)
+    );
+
+
+    const answer =
+      await peerConnection.createAnswer();
+
+    await peerConnection.setLocalDescription(
+      answer
+    );
+
+
+    socket.emit("webrtc-answer", {
+      answer,
+      target: sender
+    });
+
+  }
+);
+
+
+/* -------------------- RECEIVE ANSWER -------------------- */
+
+socket.on(
+  "webrtc-answer",
+  async ({
+    answer
+  }) => {
+
+    if (!peerConnection) return;
+
+    await peerConnection.setRemoteDescription(
+      new RTCSessionDescription(answer)
+    );
+
+  }
+);
+
+
+/* -------------------- RECEIVE ICE -------------------- */
+
+socket.on(
+  "ice-candidate",
+  async ({
+    candidate
+  }) => {
+
+    if (
+      peerConnection &&
+      candidate
+    ) {
+
+      try {
+
+        await peerConnection.addIceCandidate(
+          new RTCIceCandidate(candidate)
+        );
+
+      } catch (error) {
+
+        console.error(
+          "ICE candidate error:",
+          error
+        );
+
+      }
+
+    }
+
+  }
+);
+
+
+/* -------------------- MIC TOGGLE -------------------- */
+
+if (micBtn) {
+
+  micBtn.addEventListener(
+    "click",
+    () => {
+
+      if (!localStream) return;
+
+      const audioTrack =
+        localStream.getAudioTracks()[0];
+
+      if (!audioTrack) return;
+
+      audioTrack.enabled =
+        !audioTrack.enabled;
+
+      micBtn.classList.toggle(
+        "active",
+        !audioTrack.enabled
+      );
+
+    }
+  );
+
+}
+
+
+/* -------------------- CAMERA TOGGLE -------------------- */
+
+if (cameraBtn) {
+
+  cameraBtn.addEventListener(
+    "click",
+    () => {
+
+      if (!localStream) return;
+
+      const videoTrack =
+        localStream.getVideoTracks()[0];
+
+      if (!videoTrack) return;
+
+      videoTrack.enabled =
+        !videoTrack.enabled;
+
+      cameraBtn.classList.toggle(
+        "active",
+        !videoTrack.enabled
+      );
+
+    }
+  );
+
+}
+
+
+/* -------------------- USER LEFT -------------------- */
+
+socket.on(
+  "user-left",
+  (userId) => {
+
+    if (remoteUserId === userId) {
+
+      remoteUserId = null;
+
+    }
+
+
+    if (peerConnection) {
+
+      peerConnection.close();
+
+      peerConnection = null;
+
+    }
+
+
+    if (remoteVideo) {
+
+      remoteVideo.srcObject = null;
+
+    }
+
+  }
+);
+
+
+/* -------------------- LEAVE ROOM -------------------- */
+
+if (leaveBtn) {
+
+  leaveBtn.addEventListener(
+    "click",
+    () => {
+
+      if (localStream) {
+
+        localStream
+          .getTracks()
+          .forEach(
+            (track) =>
+              track.stop()
+          );
+
+      }
+
+
+      if (peerConnection) {
+
+        peerConnection.close();
+
+      }
+
+
+      socket.disconnect();
+
+      window.location.href =
+        "dashboard.html";
+
+    }
+  );
+
+}
