@@ -1,451 +1,511 @@
-const roomCode = localStorage.getItem("roomCode");
-const username = localStorage.getItem("username") || "You";
-const userAvatar = localStorage.getItem("userAvatar") || "🌊";
+const socket = io();
 
-/* Protect page */
+const roomCode = localStorage.getItem("roomCode");
+const username = localStorage.getItem("username") || "Guest";
+const avatar = localStorage.getItem("userAvatar") || "🌊";
 
 if (!roomCode) {
   window.location.href = "index.html";
 }
 
-/* Elements */
 
-const roomCodeDisplay = document.getElementById("roomCodeDisplay");
-const usernameDisplay = document.getElementById("usernameDisplay");
-const userAvatarDisplay = document.getElementById("userAvatar");
+/* =========================
+   JOIN ROOM
+========================= */
+
+socket.emit("join-room", {
+  roomCode,
+  username,
+  avatar
+});
+
+
+/* =========================
+   ELEMENTS
+========================= */
 
 const canvas = document.getElementById("drawingCanvas");
-const ctx = canvas.getContext("2d");
+const ctx = canvas ? canvas.getContext("2d") : null;
 
-const drawingArea = document.querySelector(".drawing-area");
-const canvasEmpty = document.getElementById("canvasEmpty");
+const roomCodeDisplay =
+  document.getElementById("roomCodeDisplay");
 
-const colorPicker = document.getElementById("colorPicker");
-const brushSize = document.getElementById("brushSize");
-const brushSizeValue = document.getElementById("brushSizeValue");
+const clearCanvasBtn =
+  document.getElementById("clearCanvasBtn");
 
-const eraserBtn = document.getElementById("eraserBtn");
-const clearCanvasBtn = document.getElementById("clearCanvasBtn");
-const undoBtn = document.getElementById("undoBtn");
-const saveCanvasBtn = document.getElementById("saveCanvasBtn");
+const colorButtons =
+  document.querySelectorAll(".color-btn");
 
-const canvasStatus = document.getElementById("canvasStatus");
+const brushSizeInput =
+  document.getElementById("brushSize");
 
 
-/* Display room and user data */
-
-roomCodeDisplay.textContent = `ROOM ${roomCode}`;
-usernameDisplay.textContent = username;
-userAvatarDisplay.textContent = userAvatar;
+if (roomCodeDisplay) {
+  roomCodeDisplay.textContent = `ROOM ${roomCode}`;
+}
 
 
-/* Canvas storage */
+/* =========================
+   DRAWING STATE
+========================= */
 
-const canvasStorageKey = `parallelCanvas_${roomCode}`;
+let isDrawing = false;
 
-let drawing = false;
-let hasDrawn = false;
-let isEraser = false;
+let currentColor = "#66e3ff";
 
-let brushColor = colorPicker.value;
-let brushWidth = Number(brushSize.value);
+let brushSize = 5;
 
-let history = [];
+let lastX = 0;
+
+let lastY = 0;
 
 
-/* Resize canvas */
+/* =========================
+   CANVAS SETUP
+========================= */
 
 function setupCanvas() {
 
-  const savedDrawing =
-    localStorage.getItem(canvasStorageKey);
-
-  const rect = drawingArea.getBoundingClientRect();
-
-  canvas.width = rect.width;
-  canvas.height = rect.height;
-
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-
-  if (savedDrawing) {
-
-    const image = new Image();
-
-    image.onload = () => {
-
-      ctx.drawImage(
-        image,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
-
-      hasDrawn = true;
-
-      canvasEmpty.style.display = "none";
-
-    };
-
-    image.src = savedDrawing;
-  }
-
-}
-
-
-/* Save history */
-
-function saveHistory() {
-
-  if (history.length >= 30) {
-    history.shift();
-  }
-
-  history.push(
-    canvas.toDataURL("image/png")
-  );
-
-}
-
-
-/* Get pointer position */
-
-function getPosition(event) {
+  if (!canvas || !ctx) return;
 
   const rect =
     canvas.getBoundingClientRect();
 
+  const savedImage =
+    ctx.getImageData(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+  canvas.width =
+    rect.width;
+
+  canvas.height =
+    rect.height;
+
+  ctx.putImageData(
+    savedImage,
+    0,
+    0
+  );
+
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+}
+
+setupCanvas();
+
+window.addEventListener(
+  "resize",
+  setupCanvas
+);
+
+
+/* =========================
+   DRAW LINE
+========================= */
+
+function drawLine(
+  startX,
+  startY,
+  endX,
+  endY,
+  color,
+  size
+) {
+
+  if (!ctx) return;
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    startX,
+    startY
+  );
+
+  ctx.lineTo(
+    endX,
+    endY
+  );
+
+  ctx.strokeStyle =
+    color;
+
+  ctx.lineWidth =
+    size;
+
+  ctx.stroke();
+
+}
+
+
+/* =========================
+   GET POSITION
+========================= */
+
+function getCanvasPosition(event) {
+
+  const rect =
+    canvas.getBoundingClientRect();
+
+  let clientX;
+  let clientY;
+
+
+  if (event.touches) {
+
+    clientX =
+      event.touches[0].clientX;
+
+    clientY =
+      event.touches[0].clientY;
+
+  } else {
+
+    clientX =
+      event.clientX;
+
+    clientY =
+      event.clientY;
+
+  }
+
+
   return {
 
     x:
-      (event.clientX - rect.left) *
-      (canvas.width / rect.width),
+      clientX - rect.left,
 
     y:
-      (event.clientY - rect.top) *
-      (canvas.height / rect.height)
+      clientY - rect.top
 
   };
 
 }
 
 
-/* Start drawing */
+/* =========================
+   START DRAWING
+========================= */
 
 function startDrawing(event) {
 
+  if (!canvas) return;
+
   event.preventDefault();
 
-  drawing = true;
-
   const position =
-    getPosition(event);
+    getCanvasPosition(event);
 
-  ctx.beginPath();
 
-  ctx.moveTo(
-    position.x,
-    position.y
-  );
+  isDrawing = true;
 
-  saveHistory();
+  lastX =
+    position.x;
+
+  lastY =
+    position.y;
 
 }
 
 
-/* Draw */
+/* =========================
+   DRAW
+========================= */
 
 function draw(event) {
 
-  if (!drawing) return;
+  if (
+    !isDrawing ||
+    !canvas
+  ) return;
 
   event.preventDefault();
 
   const position =
-    getPosition(event);
+    getCanvasPosition(event);
 
-  ctx.lineWidth = brushWidth;
 
-  ctx.strokeStyle =
-    isEraser
-      ? "#06101e"
-      : brushColor;
-
-  ctx.lineTo(
+  drawLine(
+    lastX,
+    lastY,
     position.x,
-    position.y
+    position.y,
+    currentColor,
+    brushSize
   );
 
-  ctx.stroke();
 
-  hasDrawn = true;
+  socket.emit(
+    "canvas-draw",
+    {
+      roomCode,
 
-  canvasEmpty.style.display = "none";
+      drawing: {
+
+        startX: lastX,
+        startY: lastY,
+
+        endX: position.x,
+        endY: position.y,
+
+        color: currentColor,
+
+        size: brushSize,
+
+        canvasWidth:
+          canvas.width,
+
+        canvasHeight:
+          canvas.height
+
+      }
+
+    }
+  );
+
+
+  lastX =
+    position.x;
+
+  lastY =
+    position.y;
 
 }
 
 
-/* Stop drawing */
+/* =========================
+   STOP DRAWING
+========================= */
 
 function stopDrawing() {
 
-  if (!drawing) return;
-
-  drawing = false;
-
-  ctx.closePath();
-
-  localStorage.setItem(
-    canvasStorageKey,
-    canvas.toDataURL("image/png")
-  );
-
-  canvasStatus.textContent =
-    "Drawing saved";
+  isDrawing = false;
 
 }
 
 
-/* Pointer events */
+/* =========================
+   MOUSE EVENTS
+========================= */
 
 canvas.addEventListener(
-  "pointerdown",
+  "mousedown",
   startDrawing
 );
 
 canvas.addEventListener(
-  "pointermove",
+  "mousemove",
   draw
 );
 
 canvas.addEventListener(
-  "pointerup",
+  "mouseup",
   stopDrawing
 );
 
 canvas.addEventListener(
-  "pointerleave",
+  "mouseleave",
   stopDrawing
 );
 
 
-/* Change color */
+/* =========================
+   TOUCH EVENTS
+========================= */
 
-colorPicker.addEventListener(
-  "input",
-  () => {
+canvas.addEventListener(
+  "touchstart",
+  startDrawing,
+  { passive: false }
+);
 
-    brushColor = colorPicker.value;
+canvas.addEventListener(
+  "touchmove",
+  draw,
+  { passive: false }
+);
 
-    isEraser = false;
+canvas.addEventListener(
+  "touchend",
+  stopDrawing
+);
 
-    eraserBtn.classList.remove(
-      "active"
+
+/* =========================
+   RECEIVE DRAWING
+========================= */
+
+socket.on(
+  "canvas-draw",
+  (drawing) => {
+
+    if (
+      !drawing ||
+      !canvas
+    ) return;
+
+
+    const scaleX =
+      canvas.width /
+      drawing.canvasWidth;
+
+    const scaleY =
+      canvas.height /
+      drawing.canvasHeight;
+
+
+    drawLine(
+
+      drawing.startX * scaleX,
+      drawing.startY * scaleY,
+
+      drawing.endX * scaleX,
+      drawing.endY * scaleY,
+
+      drawing.color,
+
+      drawing.size *
+      ((scaleX + scaleY) / 2)
+
     );
 
   }
 );
 
 
-/* Change brush size */
+/* =========================
+   COLOR PICKER
+========================= */
 
-brushSize.addEventListener(
-  "input",
-  () => {
+colorButtons.forEach(
+  (button) => {
 
-    brushWidth =
-      Number(brushSize.value);
+    button.addEventListener(
+      "click",
+      () => {
 
-    brushSizeValue.textContent =
-      `${brushWidth}px`;
+        currentColor =
+          button.dataset.color;
+
+        colorButtons.forEach(
+          (item) => {
+
+            item.classList.remove(
+              "active"
+            );
+
+          }
+        );
+
+        button.classList.add(
+          "active"
+        );
+
+      }
+    );
 
   }
 );
 
 
-/* Eraser */
+/* =========================
+   BRUSH SIZE
+========================= */
 
-eraserBtn.addEventListener(
-  "click",
-  () => {
+if (brushSizeInput) {
 
-    isEraser = !isEraser;
+  brushSizeInput.addEventListener(
+    "input",
+    () => {
 
-    eraserBtn.classList.toggle(
-      "active",
-      isEraser
-    );
-
-    canvasStatus.textContent =
-      isEraser
-        ? "Eraser active"
-        : "Brush active";
-
-  }
-);
-
-
-/* Clear canvas */
-
-clearCanvasBtn.addEventListener(
-  "click",
-  () => {
-
-    const confirmed = confirm(
-      "Clear the entire canvas?"
-    );
-
-    if (!confirmed) return;
-
-    saveHistory();
-
-    ctx.clearRect(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-
-    hasDrawn = false;
-
-    canvasEmpty.style.display =
-      "grid";
-
-    localStorage.removeItem(
-      canvasStorageKey
-    );
-
-    canvasStatus.textContent =
-      "Canvas cleared";
-
-  }
-);
-
-
-/* Undo */
-
-undoBtn.addEventListener(
-  "click",
-  () => {
-
-    if (history.length === 0) return;
-
-    const previousState =
-      history.pop();
-
-    ctx.clearRect(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-
-    const image = new Image();
-
-    image.onload = () => {
-
-      ctx.drawImage(
-        image,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
-
-      localStorage.setItem(
-        canvasStorageKey,
-        canvas.toDataURL("image/png")
-      );
-
-      canvasStatus.textContent =
-        "Last stroke undone";
-
-    };
-
-    image.src = previousState;
-
-    hasDrawn = true;
-
-    canvasEmpty.style.display =
-      "none";
-
-  }
-);
-
-
-/* Save drawing as image */
-
-saveCanvasBtn.addEventListener(
-  "click",
-  () => {
-
-    if (!hasDrawn) {
-
-      alert(
-        "Draw something first!"
-      );
-
-      return;
+      brushSize =
+        Number(
+          brushSizeInput.value
+        );
 
     }
+  );
 
-    const link =
-      document.createElement("a");
-
-    link.download =
-      `parallel-${roomCode}-drawing.png`;
-
-    link.href =
-      canvas.toDataURL("image/png");
-
-    link.click();
-
-    canvasStatus.textContent =
-      "Drawing saved ✓";
-
-  }
-);
+}
 
 
-/* Handle resizing */
+/* =========================
+   CLEAR CANVAS
+========================= */
 
-window.addEventListener(
-  "resize",
-  () => {
+function clearCanvas() {
 
-    const currentDrawing =
-      canvas.toDataURL("image/png");
+  if (!canvas || !ctx) return;
 
-    const rect =
-      drawingArea.getBoundingClientRect();
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
 
-    canvas.width = rect.width;
-    canvas.height = rect.height;
+}
 
-    const image = new Image();
 
-    image.onload = () => {
+if (clearCanvasBtn) {
 
-      ctx.drawImage(
-        image,
-        0,
-        0,
-        canvas.width,
-        canvas.height
+  clearCanvasBtn.addEventListener(
+    "click",
+    () => {
+
+      const confirmed =
+        confirm(
+          "Clear the shared canvas?"
+        );
+
+      if (!confirmed) return;
+
+
+      clearCanvas();
+
+
+      socket.emit(
+        "canvas-clear",
+        {
+          roomCode
+        }
       );
 
-    };
+    }
+  );
 
-    image.src = currentDrawing;
+}
+
+
+/* =========================
+   RECEIVE CLEAR
+========================= */
+
+socket.on(
+  "canvas-clear",
+  () => {
+
+    clearCanvas();
 
   }
 );
 
 
-/* Initial setup */
+/* =========================
+   CONNECTION
+========================= */
 
-setupCanvas();
+socket.on(
+  "connect",
+  () => {
 
-brushSizeValue.textContent =
-  `${brushWidth}px`;
+    console.log(
+      "Canvas connected to Parallel"
+    );
+
+  }
+);
