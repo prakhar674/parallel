@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Notes — Parallel</title>
+
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/notes.css">
+</head>
+
+<body>
+
+  <div class="background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+
+  <!-- Navigation -->
+
+  <nav class="notes-nav">
+
+    <a href="dashboard.html" class="logo">
+      <div class="logo-icon">P</div>
+      <span>Parallel</span>
+    </a>
+
+    <div class="notes-room">
+      <span class="notes-dot"></span>
+      <span id="roomCodeDisplay">
+        ROOM ------
+      </span>
+    </div>
+
+    <a href="dashboard.html" class="back-btn">
+      ← Dashboard
+    </a>
+
+  </nav>
+
+
+  <main class="notes-container">
+
+
+    <!-- Header -->
+
+    <section class="notes-header">
+
+      <div>
+
+        <p class="eyebrow">
+          SHARED NOTES
+        </p>
+
+        <h1>
+          Leave a thought in <span>Parallel.</span>
+        </h1>
+
+        <p class="notes-subtext">
+          Save ideas, reminders and little things
+          worth coming back to.
+        </p>
+
+      </div>
+
+
+      <button
+        class="add-note-btn"
+        id="openNoteModalBtn"
+      >
+        + New Note
+      </button>
+
+    </section>
+
+
+    <!-- Stats -->
+
+    <section class="notes-stats">
+
+      <div class="note-stat glass">
+
+        <span
+          class="note-stat-number"
+          id="noteCount"
+        >
+          0
+        </span>
+
+        <span class="note-stat-label">
+          Total Notes
+        </span>
+
+      </div>
+
+
+      <div class="note-stat glass">
+
+        <span
+          class="note-stat-number"
+          id="todayNoteCount"
+        >
+          0
+        </span>
+
+        <span class="note-stat-label">
+          Added Today
+        </span>
+
+      </div>
+
+
+      <div class="note-stat glass">
+
+        <span
+          class="note-stat-number"
+          id="latestNote"
+        >
+          —
+        </span>
+
+        <span class="note-stat-label">
+          Latest Note
+        </span>
+
+      </div>
+
+    </section>
+
+
+    <!-- Notes Section -->
+
+    <section class="notes-section">
+
+      <div class="section-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            YOUR SPACE
+          </p>
+
+          <h2>
+            Notes board
+          </h2>
+
+        </div>
+
+
+        <button
+          class="clear-notes-btn"
+          id="clearNotesBtn"
+        >
+          Clear All
+        </button>
+
+      </div>
+
+
+      <!-- Notes Grid -->
+
+      <div
+        class="notes-grid"
+        id="notesGrid"
+      >
+
+        <!-- Empty State -->
+
+        <div
+          class="notes-empty"
+          id="notesEmpty"
+        >
+
+          <div class="empty-note-icon">
+            ✦
+          </div>
+
+          <h2>
+            Nothing here yet.
+          </h2>
+
+          <p>
+            Write your first note and leave
+            something behind in Parallel.
+          </p>
+
+          <button
+            class="empty-add-note-btn"
+            id="emptyAddNoteBtn"
+          >
+            + Create a note
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- Bottom Info -->
+
+    <section class="notes-quote glass">
+
+      <div class="quote-icon">
+        📝
+      </div>
+
+      <div>
+
+        <p class="eyebrow">
+          PARALLEL NOTES
+        </p>
+
+        <h2>
+          Small thoughts can become big memories.
+        </h2>
+
+        <p>
+          Keep ideas, reminders and random thoughts
+          together in one shared space.
+        </p>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- Add / Edit Note Modal -->
+
+  <div
+    class="note-modal"
+    id="noteModal"
+  >
+
+    <div class="note-modal-card">
+
+      <button
+        class="close-note-modal"
+        id="closeNoteModalBtn"
+      >
+        ×
+      </button>
+
+
+      <p
+        class="eyebrow"
+        id="noteModalLabel"
+      >
+        NEW NOTE
+      </p>
+
+      <h2 id="noteModalTitle">
+        Write something.
+      </h2>
+
+
+      <form id="noteForm">
+
+
+        <!-- Note Color -->
+
+        <div class="note-color-picker">
+
+          <span>NOTE COLOR</span>
+
+          <div class="color-options">
+
+            <button
+              type="button"
+              class="note-color active"
+              data-color="blue"
+            ></button>
+
+            <button
+              type="button"
+              class="note-color"
+              data-color="purple"
+            ></button>
+
+            <button
+              type="button"
+              class="note-color"
+              data-color="pink"
+            ></button>
+
+            <button
+              type="button"
+              class="note-color"
+              data-color="green"
+            ></button>
+
+            <button
+              type="button"
+              class="note-color"
+              data-color="orange"
+            ></button>
+
+          </div>
+
+        </div>
+
+
+        <!-- Title -->
+
+        <input
+          type="text"
+          id="noteTitle"
+          placeholder="Note title..."
+          maxlength="60"
+          required
+        >
+
+
+        <!-- Content -->
+
+        <textarea
+          id="noteContent"
+          placeholder="Write whatever is on your mind..."
+          maxlength="1000"
+          required
+        ></textarea>
+
+
+        <button
+          type="submit"
+          class="save-note-btn"
+          id="saveNoteBtn"
+        >
+          Save Note ✦
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+  <!-- Note Viewer -->
+
+  <div
+    class="note-viewer"
+    id="noteViewer"
+  >
+
+    <button
+      class="close-note-viewer"
+      id="closeNoteViewerBtn"
+    >
+      ×
+    </button>
+
+
+    <div
+      class="note-viewer-card"
+      id="noteViewerCard"
+    >
+    </div>
+
+  </div>
+
+
+  <script src="js/notes.js"></script>
+
+</body>
+
+</html>
