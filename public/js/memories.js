@@ -1,25 +1,63 @@
-const roomCode = localStorage.getItem("roomCode");
-const username = localStorage.getItem("username") || "You";
+const socket = io();
 
-/* Protect page */
+const roomCode =
+  localStorage.getItem("roomCode");
+
+const username =
+  localStorage.getItem("username") || "Guest";
+
+const avatar =
+  localStorage.getItem("userAvatar") || "🌊";
+
+
+/* =========================
+   ROOM CHECK
+========================= */
 
 if (!roomCode) {
   window.location.href = "index.html";
 }
 
-/* Elements */
 
-const roomCodeDisplay = document.getElementById("roomCodeDisplay");
+/* =========================
+   JOIN ROOM
+========================= */
 
-const memoryCount = document.getElementById("memoryCount");
-const thisMonthCount = document.getElementById("thisMonthCount");
-const latestMemoryDate = document.getElementById("latestMemoryDate");
+socket.emit("join-room", {
+  roomCode,
+  username,
+  avatar
+});
 
-const memoriesGrid = document.getElementById("memoriesGrid");
-const memoriesEmpty = document.getElementById("memoriesEmpty");
 
-const openMemoryModalBtn =
-  document.getElementById("openMemoryModalBtn");
+/* =========================
+   STORAGE
+========================= */
+
+const storageKey =
+  `parallelMemories_${roomCode}`;
+
+let memories =
+  JSON.parse(
+    localStorage.getItem(storageKey)
+  ) || [];
+
+
+/* =========================
+   ELEMENTS
+========================= */
+
+const roomCodeDisplay =
+  document.getElementById("roomCodeDisplay");
+
+const memoriesGrid =
+  document.getElementById("memoriesGrid");
+
+const memoriesEmpty =
+  document.getElementById("memoriesEmpty");
+
+const addMemoryBtn =
+  document.getElementById("addMemoryBtn");
 
 const emptyAddMemoryBtn =
   document.getElementById("emptyAddMemoryBtn");
@@ -33,12 +71,6 @@ const closeMemoryModalBtn =
 const memoryForm =
   document.getElementById("memoryForm");
 
-const memoryPhotoInput =
-  document.getElementById("memoryPhotoInput");
-
-const memoryPhotoPreview =
-  document.getElementById("memoryPhotoPreview");
-
 const memoryTitle =
   document.getElementById("memoryTitle");
 
@@ -48,126 +80,67 @@ const memoryDate =
 const memoryDescription =
   document.getElementById("memoryDescription");
 
+const memoryImage =
+  document.getElementById("memoryImage");
+
+const memoryCount =
+  document.getElementById("memoryCount");
+
 const clearMemoriesBtn =
   document.getElementById("clearMemoriesBtn");
 
-const memoryViewer =
-  document.getElementById("memoryViewer");
 
-const memoryViewerContent =
-  document.getElementById("memoryViewerContent");
-
-const closeMemoryViewerBtn =
-  document.getElementById("closeMemoryViewerBtn");
+if (roomCodeDisplay) {
+  roomCodeDisplay.textContent =
+    `ROOM ${roomCode}`;
+}
 
 
-/* Display room code */
-
-roomCodeDisplay.textContent = `ROOM ${roomCode}`;
-
-
-/* Storage */
-
-const memoryStorageKey = `parallelMemories_${roomCode}`;
-
-let memories = JSON.parse(
-  localStorage.getItem(memoryStorageKey)
-) || [];
-
-let selectedPhoto = null;
-
-
-/* Save memories */
+/* =========================
+   SAVE LOCAL
+========================= */
 
 function saveMemories() {
+
   localStorage.setItem(
-    memoryStorageKey,
+    storageKey,
     JSON.stringify(memories)
   );
+
 }
 
 
-/* Set today's date by default */
+/* =========================
+   REAL-TIME BROADCAST
+========================= */
 
-function setTodayDate() {
-  const today = new Date();
+function broadcastMemories() {
 
-  const formattedDate =
-    today.getFullYear() +
-    "-" +
-    String(today.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(today.getDate()).padStart(2, "0");
+  socket.emit("update-memories", {
+    roomCode,
+    memories
+  });
 
-  memoryDate.value = formattedDate;
 }
 
 
-/* Open modal */
+/* =========================
+   FORMAT DATE
+========================= */
 
-function openMemoryModal() {
-  memoryModal.classList.add("active");
-}
+function formatDate(dateValue) {
 
+  if (!dateValue) {
+    return "No date";
+  }
 
-/* Close modal */
-
-function closeMemoryModal() {
-  memoryModal.classList.remove("active");
-
-  memoryForm.reset();
-
-  selectedPhoto = null;
-
-  memoryPhotoPreview.innerHTML = `
-    <span>📸</span>
-    <p>Add a photo</p>
-  `;
-
-  setTodayDate();
-}
-
-
-/* Photo preview */
-
-memoryPhotoInput.addEventListener("change", () => {
-
-  const file = memoryPhotoInput.files[0];
-
-  if (!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = (event) => {
-
-    selectedPhoto = event.target.result;
-
-    memoryPhotoPreview.innerHTML = `
-      <img
-        src="${selectedPhoto}"
-        alt="Memory preview"
-      >
-    `;
-  };
-
-  reader.readAsDataURL(file);
-
-});
-
-
-/* Format date */
-
-function formatDate(dateString) {
-
-  const date = new Date(
-    dateString + "T00:00:00"
-  );
-
-  return date.toLocaleDateString(
+  return new Date(
+    `${dateValue}T00:00:00`
+  ).toLocaleDateString(
     "en-US",
     {
       day: "numeric",
-      month: "short",
+      month: "long",
       year: "numeric"
     }
   );
@@ -175,370 +148,493 @@ function formatDate(dateString) {
 }
 
 
-/* Update stats */
+/* =========================
+   UPDATE COUNT
+========================= */
 
-function updateStats() {
+function updateMemoryCount() {
 
-  memoryCount.textContent = memories.length;
+  if (memoryCount) {
 
-  const now = new Date();
+    memoryCount.textContent =
+      memories.length;
 
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-
-  const monthMemories = memories.filter((memory) => {
-
-    const date = new Date(
-      memory.date + "T00:00:00"
-    );
-
-    return (
-      date.getMonth() === currentMonth &&
-      date.getFullYear() === currentYear
-    );
-
-  });
-
-  thisMonthCount.textContent =
-    monthMemories.length;
-
-
-  if (memories.length === 0) {
-
-    latestMemoryDate.textContent = "—";
-
-    return;
   }
 
+}
 
-  const sortedMemories = [...memories].sort(
-    (a, b) => {
 
-      return new Date(
-        b.date
-      ) - new Date(
-        a.date
-      );
+/* =========================
+   OPEN MODAL
+========================= */
 
-    }
+function openMemoryModal() {
+
+  if (!memoryModal) return;
+
+  memoryForm.reset();
+
+  memoryModal.classList.add(
+    "active"
   );
 
-  latestMemoryDate.textContent =
-    formatDate(sortedMemories[0].date);
+}
+
+
+/* =========================
+   CLOSE MODAL
+========================= */
+
+function closeMemoryModal() {
+
+  if (!memoryModal) return;
+
+  memoryModal.classList.remove(
+    "active"
+  );
+
+  memoryForm.reset();
 
 }
 
 
-/* Open memory viewer */
-
-function openMemoryViewer(memory) {
-
-  memoryViewerContent.innerHTML = `
-    ${
-      memory.photo
-        ? `
-          <img
-            class="viewer-image"
-            src="${memory.photo}"
-            alt="${memory.title}"
-          >
-        `
-        : ""
-    }
-
-    <div class="viewer-content">
-
-      <span class="viewer-date">
-        ${formatDate(memory.date)}
-      </span>
-
-      <h2>
-        ${memory.title}
-      </h2>
-
-      ${
-        memory.description
-          ? `
-            <p>
-              ${memory.description}
-            </p>
-          `
-          : ""
-      }
-
-    </div>
-  `;
-
-  memoryViewer.classList.add("active");
-
-}
-
-
-/* Render memories */
+/* =========================
+   RENDER MEMORIES
+========================= */
 
 function renderMemories() {
 
+  if (!memoriesGrid) return;
+
   memoriesGrid.innerHTML = "";
+
 
   if (memories.length === 0) {
 
-    memoriesGrid.appendChild(
-      memoriesEmpty
-    );
+    if (memoriesEmpty) {
 
-    updateStats();
+      memoriesGrid.appendChild(
+        memoriesEmpty
+      );
+
+    }
+
+    updateMemoryCount();
 
     return;
+
   }
 
 
-  const sortedMemories = [...memories].sort(
-    (a, b) => {
+  const sortedMemories =
+    [...memories].sort(
+      (a, b) =>
+        new Date(b.createdAt) -
+        new Date(a.createdAt)
+    );
 
-      return new Date(
-        b.date
-      ) - new Date(
-        a.date
+
+  sortedMemories.forEach(
+    (memory) => {
+
+      const card =
+        document.createElement("article");
+
+      card.className =
+        "memory-card";
+
+
+      if (memory.image) {
+
+        const image =
+          document.createElement("img");
+
+        image.src =
+          memory.image;
+
+        image.alt =
+          memory.title;
+
+        image.className =
+          "memory-image";
+
+        card.appendChild(image);
+
+      }
+
+
+      const content =
+        document.createElement("div");
+
+      content.className =
+        "memory-content";
+
+
+      const date =
+        document.createElement("span");
+
+      date.className =
+        "memory-date";
+
+      date.textContent =
+        formatDate(memory.date);
+
+
+      const title =
+        document.createElement("h3");
+
+      title.textContent =
+        memory.title;
+
+
+      const description =
+        document.createElement("p");
+
+      description.className =
+        "memory-description";
+
+      description.textContent =
+        memory.description;
+
+
+      const author =
+        document.createElement("small");
+
+      author.className =
+        "memory-author";
+
+      author.textContent =
+        `Added by ${
+          memory.username || "Guest"
+        }`;
+
+
+      const deleteBtn =
+        document.createElement("button");
+
+      deleteBtn.className =
+        "memory-delete";
+
+      deleteBtn.textContent =
+        "Delete";
+
+
+      deleteBtn.addEventListener(
+        "click",
+        (event) => {
+
+          event.stopPropagation();
+
+          deleteMemory(
+            memory.id
+          );
+
+        }
+      );
+
+
+      content.appendChild(date);
+      content.appendChild(title);
+      content.appendChild(description);
+      content.appendChild(author);
+      content.appendChild(deleteBtn);
+
+      card.appendChild(content);
+
+
+      memoriesGrid.appendChild(
+        card
       );
 
     }
   );
 
 
-  sortedMemories.forEach((memory) => {
-
-    const memoryItem =
-      document.createElement("article");
-
-    memoryItem.className =
-      "memory-item";
-
-
-    if (memory.photo) {
-
-      const imageContainer =
-        document.createElement("div");
-
-      imageContainer.className =
-        "memory-image";
-
-      const image =
-        document.createElement("img");
-
-      image.src = memory.photo;
-
-      image.alt = memory.title;
-
-      imageContainer.appendChild(image);
-
-      memoryItem.appendChild(
-        imageContainer
-      );
-
-    }
-
-
-    const content =
-      document.createElement("div");
-
-    content.className =
-      "memory-content";
-
-
-    const date =
-      document.createElement("span");
-
-    date.className =
-      "memory-date";
-
-    date.textContent =
-      formatDate(memory.date);
-
-
-    const title =
-      document.createElement("h3");
-
-    title.textContent =
-      memory.title;
-
-
-    const description =
-      document.createElement("p");
-
-    description.textContent =
-      memory.description ||
-      "A moment saved in Parallel.";
-
-
-    content.appendChild(date);
-    content.appendChild(title);
-    content.appendChild(description);
-
-    memoryItem.appendChild(content);
-
-
-    memoryItem.addEventListener(
-      "click",
-      () => {
-
-        openMemoryViewer(memory);
-
-      }
-    );
-
-
-    memoriesGrid.appendChild(
-      memoryItem
-    );
-
-  });
-
-
-  updateStats();
+  updateMemoryCount();
 
 }
 
 
-/* Save new memory */
+/* =========================
+   ADD MEMORY
+========================= */
 
-memoryForm.addEventListener(
-  "submit",
-  (event) => {
+if (memoryForm) {
 
-    event.preventDefault();
+  memoryForm.addEventListener(
+    "submit",
+    (event) => {
 
-
-    const newMemory = {
-
-      id: Date.now(),
-
-      title:
-        memoryTitle.value.trim(),
-
-      date:
-        memoryDate.value,
-
-      description:
-        memoryDescription.value.trim(),
-
-      photo:
-        selectedPhoto,
-
-      addedBy:
-        username,
-
-      createdAt:
-        new Date().toISOString()
-
-    };
+      event.preventDefault();
 
 
-    memories.push(newMemory);
+      const title =
+        memoryTitle.value.trim();
+
+      const description =
+        memoryDescription.value.trim();
+
+      const date =
+        memoryDate.value;
+
+
+      if (!title) {
+        alert(
+          "Give this memory a title."
+        );
+
+        return;
+      }
+
+
+      const createMemory =
+        (imageData = "") => {
+
+          const memory = {
+
+            id:
+              `${Date.now()}-${Math.random()}`,
+
+            title,
+
+            description,
+
+            date,
+
+            image: imageData,
+
+            username,
+
+            avatar,
+
+            createdAt:
+              new Date().toISOString()
+
+          };
+
+
+          memories.unshift(
+            memory
+          );
+
+
+          saveMemories();
+
+          renderMemories();
+
+          broadcastMemories();
+
+          closeMemoryModal();
+
+        };
+
+
+      const file =
+        memoryImage &&
+        memoryImage.files
+          ? memoryImage.files[0]
+          : null;
+
+
+      if (file) {
+
+        if (
+          !file.type.startsWith(
+            "image/"
+          )
+        ) {
+
+          alert(
+            "Please select an image file."
+          );
+
+          return;
+
+        }
+
+
+        const reader =
+          new FileReader();
+
+
+        reader.onload =
+          (loadEvent) => {
+
+            createMemory(
+              loadEvent.target.result
+            );
+
+          };
+
+
+        reader.readAsDataURL(
+          file
+        );
+
+      } else {
+
+        createMemory();
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================
+   DELETE MEMORY
+========================= */
+
+function deleteMemory(id) {
+
+  const confirmed =
+    confirm(
+      "Delete this memory?"
+    );
+
+  if (!confirmed) return;
+
+
+  memories =
+    memories.filter(
+      (memory) =>
+        memory.id !== id
+    );
+
+
+  saveMemories();
+
+  renderMemories();
+
+  broadcastMemories();
+
+}
+
+
+/* =========================
+   CLEAR ALL
+========================= */
+
+if (clearMemoriesBtn) {
+
+  clearMemoriesBtn.addEventListener(
+    "click",
+    () => {
+
+      if (memories.length === 0) {
+        return;
+      }
+
+
+      const confirmed =
+        confirm(
+          "Clear all memories from this room?"
+        );
+
+      if (!confirmed) return;
+
+
+      memories = [];
+
+      saveMemories();
+
+      renderMemories();
+
+      broadcastMemories();
+
+    }
+  );
+
+}
+
+
+/* =========================
+   RECEIVE REAL-TIME UPDATE
+========================= */
+
+socket.on(
+  "memories-updated",
+  (incomingMemories) => {
+
+    if (
+      !Array.isArray(
+        incomingMemories
+      )
+    ) {
+      return;
+    }
+
+
+    memories =
+      incomingMemories;
+
 
     saveMemories();
 
     renderMemories();
 
-    closeMemoryModal();
-
   }
 );
 
 
-/* Open buttons */
+/* =========================
+   MODAL BUTTONS
+========================= */
 
-openMemoryModalBtn.addEventListener(
-  "click",
-  openMemoryModal
-);
+if (addMemoryBtn) {
 
-emptyAddMemoryBtn.addEventListener(
-  "click",
-  openMemoryModal
-);
+  addMemoryBtn.addEventListener(
+    "click",
+    openMemoryModal
+  );
 
-
-/* Close modal */
-
-closeMemoryModalBtn.addEventListener(
-  "click",
-  closeMemoryModal
-);
+}
 
 
-/* Close modal when clicking outside */
+if (emptyAddMemoryBtn) {
 
-memoryModal.addEventListener(
-  "click",
-  (event) => {
+  emptyAddMemoryBtn.addEventListener(
+    "click",
+    openMemoryModal
+  );
 
-    if (event.target === memoryModal) {
+}
 
-      closeMemoryModal();
+
+if (closeMemoryModalBtn) {
+
+  closeMemoryModalBtn.addEventListener(
+    "click",
+    closeMemoryModal
+  );
+
+}
+
+
+if (memoryModal) {
+
+  memoryModal.addEventListener(
+    "click",
+    (event) => {
+
+      if (
+        event.target === memoryModal
+      ) {
+
+        closeMemoryModal();
+
+      }
 
     }
+  );
 
-  }
-);
-
-
-/* Close viewer */
-
-closeMemoryViewerBtn.addEventListener(
-  "click",
-  () => {
-
-    memoryViewer.classList.remove(
-      "active"
-    );
-
-  }
-);
+}
 
 
-memoryViewer.addEventListener(
-  "click",
-  (event) => {
-
-    if (event.target === memoryViewer) {
-
-      memoryViewer.classList.remove(
-        "active"
-      );
-
-    }
-
-  }
-);
-
-
-/* Clear all memories */
-
-clearMemoriesBtn.addEventListener(
-  "click",
-  () => {
-
-    if (memories.length === 0) return;
-
-    const confirmed = confirm(
-      "Clear all memories from this Parallel room?"
-    );
-
-    if (!confirmed) return;
-
-
-    memories = [];
-
-    saveMemories();
-
-    renderMemories();
-
-  }
-);
-
-
-/* Initial setup */
-
-setTodayDate();
+/* =========================
+   INITIAL RENDER
+========================= */
 
 renderMemories();
