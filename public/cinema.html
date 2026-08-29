@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Cinema — Parallel</title>
+
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/cinema.css">
+</head>
+
+<body>
+
+  <div class="background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+
+  <!-- Navigation -->
+
+  <nav class="cinema-nav">
+
+    <a href="dashboard.html" class="logo">
+      <div class="logo-icon">P</div>
+      <span>Parallel</span>
+    </a>
+
+    <div class="cinema-room">
+      <span class="live-dot"></span>
+      <span id="roomCodeDisplay">ROOM ------</span>
+    </div>
+
+    <a href="dashboard.html" class="back-btn">
+      ← Dashboard
+    </a>
+
+  </nav>
+
+
+  <main class="cinema-container">
+
+    <!-- Header -->
+
+    <section class="cinema-header">
+
+      <div>
+        <p class="eyebrow">PARALLEL CINEMA</p>
+
+        <h1>Watch it <span>together.</span></h1>
+
+        <p>
+          Pick a video and experience it side by side.
+        </p>
+      </div>
+
+      <div class="watch-status">
+        <span></span>
+        Waiting for your person
+      </div>
+
+    </section>
+
+
+    <!-- Cinema Screen -->
+
+    <section class="cinema-screen">
+
+      <video
+        id="cinemaVideo"
+        controls
+        playsinline>
+      </video>
+
+
+      <div class="cinema-placeholder" id="cinemaPlaceholder">
+
+        <div class="cinema-icon">
+          🎬
+        </div>
+
+        <h2>Your cinema is ready.</h2>
+
+        <p>
+          Choose a video to start watching.
+        </p>
+
+        <label
+          for="videoInput"
+          class="choose-video-btn"
+        >
+          Choose Video
+        </label>
+
+      </div>
+
+    </section>
+
+
+    <input
+      type="file"
+      id="videoInput"
+      accept="video/*"
+      hidden
+    >
+
+
+    <!-- Cinema Controls -->
+
+    <section class="cinema-controls">
+
+      <div class="movie-info">
+
+        <div class="movie-icon">
+          🎞️
+        </div>
+
+        <div>
+          <small>NOW PLAYING</small>
+          <strong id="videoTitle">
+            Nothing selected
+          </strong>
+        </div>
+
+      </div>
+
+
+      <div class="control-actions">
+
+        <button
+          id="playPauseBtn"
+          class="cinema-control"
+        >
+          ▶
+        </button>
+
+        <button
+          id="restartBtn"
+          class="cinema-control"
+        >
+          ↺
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- Watch Together -->
+
+    <section class="watch-together">
+
+      <div class="watch-card glass">
+
+        <div class="watch-card-header">
+
+          <div>
+            <p class="eyebrow">WATCHING TOGETHER</p>
+            <h2>In the cinema</h2>
+          </div>
+
+          <span>✦</span>
+
+        </div>
+
+
+        <div class="watch-members">
+
+          <div class="watch-member">
+
+            <div
+              class="watch-avatar"
+              id="userAvatar"
+            >
+              🌊
+            </div>
+
+            <div>
+              <strong id="usernameDisplay">
+                You
+              </strong>
+
+              <small>You</small>
+            </div>
+
+          </div>
+
+
+          <div class="watch-connection">
+            ─ ✦ ─
+          </div>
+
+
+          <div class="watch-member">
+
+            <div class="watch-avatar friend-watch-avatar">
+              ?
+            </div>
+
+            <div>
+              <strong>Waiting...</strong>
+
+              <small>Invite someone</small>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- Quick Chat -->
+
+      <div class="cinema-chat glass">
+
+        <div class="cinema-chat-header">
+
+          <div>
+            <p class="eyebrow">LIVE REACTIONS</p>
+            <h2>Say it 👀</h2>
+          </div>
+
+        </div>
+
+
+        <div
+          class="cinema-messages"
+          id="cinemaMessages"
+        >
+
+          <div class="empty-cinema-chat">
+            <span>🎬</span>
+            <p>React while you watch.</p>
+          </div>
+
+        </div>
+
+
+        <form
+          class="cinema-chat-input"
+          id="cinemaChatForm"
+        >
+
+          <input
+            type="text"
+            id="cinemaChatInput"
+            placeholder="Send a reaction..."
+            autocomplete="off"
+          >
+
+          <button type="submit">
+            ↑
+          </button>
+
+        </form>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <script src="js/cinema.js"></script>
+
+</body>
+
+</html>
